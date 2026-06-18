@@ -1,4 +1,4 @@
-This is a complete HTML document for a mobile-friendly driving game set in Egypt. You can run it directly in your browser to navigate traffic using the horn and steering mechanics.
+Here's an enhanced version of the "Chaos & Flow" driving game with a much improved UI, better visuals, and more immersive Egyptian atmosphere.
 
 ```html
 <!DOCTYPE html>
@@ -8,723 +8,934 @@ This is a complete HTML document for a mobile-friendly driving game set in Egypt
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=yes">
   <title>Chaos & Flow • Cairo Drift</title>
   <style>
+    :root {
+      --gold: #d4a844;
+      --gold-light: #f0d68a;
+      --dark-bg: #0b0e14;
+      --panel-bg: rgba(18, 22, 30, 0.9);
+      --flow-color: #4ade80;
+      --threat-color: #f87171;
+      --text-primary: #f5efe0;
+      --text-secondary: #b8b0a0;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
-      font-family: 'Segoe UI', 'Cairo', system-ui, sans-serif;
+      font-family: 'Segoe UI', 'Cairo', 'Inter', system-ui, sans-serif;
     }
+
     body {
-      background: #0a0f1a;
+      background: linear-gradient(135deg, #0a0f1a 0%, #141c28 50%, #0d1117 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       margin: 0;
-      padding: 10px;
+      padding: 12px;
+      background-attachment: fixed;
     }
-    .game-container {
-      background: linear-gradient(145deg, #1a1f2c 0%, #0b0e14 100%);
-      border-radius: 2.5rem;
-      padding: 1rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 8px rgba(255,215,0,0.3);
-      max-width: 500px;
+
+    .game-wrapper {
+      max-width: 480px;
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
+
+    /* Header with title and arabesque feel */
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .game-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(180deg, #f7df94 0%, #c9972e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(212, 168, 68, 0.4);
+      font-family: 'Cairo', sans-serif;
+    }
+
+    .arabesque {
+      font-size: 1.5rem;
+      opacity: 0.7;
+    }
+
+    /* Main game container */
+    .game-container {
+      background: var(--panel-bg);
+      border-radius: 28px;
+      padding: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 0 2px rgba(212, 168, 68, 0.25),
+        0 0 40px rgba(212, 168, 68, 0.1);
+      border: 1px solid rgba(212, 168, 68, 0.3);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(212, 168, 68, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
     canvas {
       display: block;
       width: 100%;
       height: auto;
-      border-radius: 2rem;
-      background: radial-gradient(circle at 50% 20%, #3a4a5c, #1b1e27);
-      box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 20px black;
-      touch-action: none;  /* prevent gestures */
+      border-radius: 20px;
+      background: radial-gradient(ellipse at 50% 30%, #2a3440 0%, #151a22 100%);
+      box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.7), 0 8px 20px rgba(0, 0, 0, 0.5);
+      touch-action: none;
+      position: relative;
+      z-index: 1;
     }
+
+    /* Dashboard - refined meters */
     .dashboard {
-      margin-top: 1rem;
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meter-card {
+      background: rgba(20, 25, 35, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 10px 8px;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
-      background: rgba(10, 15, 25, 0.8);
-      backdrop-filter: blur(12px);
-      border-radius: 3rem;
-      padding: 0.8rem 1.5rem;
-      color: #f0e6c5;
-      border: 1px solid #c9a035;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.7);
+      gap: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
-    .meter {
+
+    .meter-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      color: #8b8d94;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-weight: bold;
-      font-size: 0.9rem;
-      letter-spacing: 0.5px;
+      gap: 5px;
     }
-    .flow-meter {
-      background: #1e3a2f;
-      padding: 0.3rem 1rem;
-      border-radius: 2rem;
-      color: #7df0b0;
-      text-shadow: 0 0 6px #0f0;
-      border: 1px solid #3cba6c;
+
+    .meter-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: 'Cairo', sans-serif;
     }
-    .threat-level {
-      background: #3d1e1e;
-      padding: 0.3rem 1rem;
-      border-radius: 2rem;
-      color: #ff9f7c;
-      text-shadow: 0 0 6px #f44;
-      border: 1px solid #b54a3c;
+
+    .meter-bar-bg {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 2px;
     }
-    .fines {
-      background: #1f1b2e;
-      padding: 0.3rem 1.2rem;
-      border-radius: 2rem;
-      color: #ffd966;
-      border: 1px solid #e6b422;
+
+    .meter-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px currentColor;
     }
+
+    .flow-card {
+      border-left: 3px solid #4ade80;
+    }
+    .flow-value {
+      color: #4ade80;
+      text-shadow: 0 0 12px rgba(74, 222, 128, 0.5);
+    }
+    .flow-fill {
+      background: #4ade80;
+      box-shadow: 0 0 10px #4ade80;
+    }
+
+    .threat-card {
+      border-left: 3px solid #f87171;
+    }
+    .threat-value {
+      color: #f87171;
+      text-shadow: 0 0 12px rgba(248, 113, 113, 0.5);
+    }
+    .threat-fill {
+      background: #f87171;
+      box-shadow: 0 0 10px #f87171;
+    }
+
+    .fines-card {
+      border-left: 3px solid #fbbf24;
+    }
+    .fines-value {
+      color: #fbbf24;
+      text-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+    }
+
+    /* Controls area */
     .controls {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-top: 0.8rem;
-      gap: 0.8rem;
+      gap: 10px;
+      margin-top: 8px;
+      position: relative;
+      z-index: 2;
     }
+
     .horn-btn {
-      background: #d4a11e;
+      background: linear-gradient(180deg, #f5d061 0%, #b8861e 100%);
       border: none;
-      border-radius: 3rem;
-      padding: 0.9rem 1.8rem;
-      font-weight: bold;
-      font-size: 1.3rem;
-      color: #1e1a0f;
-      background: radial-gradient(circle at 30% 30%, #f3cd4b, #b57c10);
-      box-shadow: 0 6px 0 #6b4a0c, 0 12px 20px rgba(0,0,0,0.5);
-      letter-spacing: 2px;
-      transition: all 0.1s ease;
+      border-radius: 50px;
+      padding: 14px 20px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #2c1a06;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 0 #7a5515, 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: all 0.08s ease;
       touch-action: manipulation;
       cursor: pointer;
-      flex: 1;
+      flex: 1.2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 200, 0.3);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
+
     .horn-btn:active {
-      transform: translateY(3px);
-      box-shadow: 0 3px 0 #5a3c08, 0 8px 12px black;
-      background: radial-gradient(circle at 30% 30%, #ffe074, #c9941a);
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #7a5515, 0 6px 15px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(180deg, #e6c155 0%, #a5771a 100%);
     }
+
+    .horn-icon {
+      font-size: 1.5rem;
+    }
+
     .steering {
       display: flex;
-      gap: 0.6rem;
+      gap: 8px;
       flex: 2;
       justify-content: center;
     }
+
     .arrow-btn {
-      background: #2c3140;
-      border: none;
-      border-radius: 2rem;
-      padding: 0.7rem 1.4rem;
-      font-size: 1.8rem;
+      background: linear-gradient(180deg, #3b4252 0%, #1e2330 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 14px 20px;
+      font-size: 1.6rem;
       font-weight: bold;
-      color: #e0e8ff;
-      background: linear-gradient(180deg, #3f4658 0%, #1b1f2b 100%);
-      box-shadow: 0 4px 0 #0a0d14, 0 6px 12px black;
-      transition: 0.07s;
+      color: #d5ddf0;
+      box-shadow: 0 4px 0 #0f131c, 0 8px 18px rgba(0, 0, 0, 0.5);
+      transition: all 0.08s ease;
       touch-action: manipulation;
       cursor: pointer;
+      flex: 1;
+      text-align: center;
       line-height: 1;
+      background: radial-gradient(circle at 50% 30%, #4a5368, #1c212e);
     }
+
     .arrow-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #0a0d14, 0 4px 8px black;
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #0f131c, 0 4px 10px rgba(0, 0, 0, 0.5);
     }
+
     .restart-btn {
-      background: #2f384a;
-      color: #cdd6f0;
-      border: none;
-      border-radius: 2rem;
-      padding: 0.5rem 1.2rem;
-      font-weight: bold;
-      background: #1e2533;
-      box-shadow: 0 4px 0 #0b0f16;
-      margin-left: 0.3rem;
-      font-size: 0.9rem;
+      background: linear-gradient(180deg, #2a3243 0%, #141a26 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 14px 14px;
+      font-size: 1.4rem;
+      color: #b9c2da;
+      box-shadow: 0 4px 0 #0a0e15, 0 8px 18px rgba(0, 0, 0, 0.5);
+      transition: all 0.08s ease;
       touch-action: manipulation;
+      cursor: pointer;
+      flex: 0.6;
+      text-align: center;
+      background: radial-gradient(circle at 50% 30%, #3d4558, #181e2a);
     }
-    @media (max-width: 450px) {
-      .horn-btn { font-size: 1rem; padding: 0.7rem 1rem; }
-      .arrow-btn { padding: 0.5rem 1rem; font-size: 1.5rem; }
+
+    .restart-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #0a0e15, 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .hint-text {
+      color: #6b7080;
+      font-size: 0.7rem;
+      text-align: center;
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+      font-style: italic;
+    }
+
+    @media (max-width: 400px) {
+      .horn-btn {
+        font-size: 0.9rem;
+        padding: 12px 14px;
+      }
+      .arrow-btn {
+        padding: 12px 14px;
+        font-size: 1.4rem;
+      }
+      .meter-value {
+        font-size: 1.3rem;
+      }
     }
   </style>
 </head>
 <body>
-<div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-  <div class="game-container">
-    <canvas id="gameCanvas" width="400" height="600" aria-label="Chaos and Flow driving game"></canvas>
-    
-    <div class="dashboard">
-      <div class="meter flow-meter">🌊 FLOW <span id="flowValue">70</span>%</div>
-      <div class="meter threat-level">⚠️ THREAT <span id="threatValue">20</span>%</div>
-      <div class="fines">💸 <span id="fineAmount">0</span> EGP</div>
+  <div class="game-wrapper">
+    <!-- Header with Egyptian vibe -->
+    <div class="game-header">
+      <span class="arabesque">☀️</span>
+      <span class="game-title">CHAOS & FLOW</span>
+      <span class="arabesque">🌙</span>
     </div>
 
-    <div class="controls">
-      <button class="horn-btn" id="hornButton">📢 HORN</button>
-      <div class="steering">
-        <button class="arrow-btn" id="leftBtn">◀</button>
-        <button class="arrow-btn" id="rightBtn">▶</button>
+    <!-- Game container -->
+    <div class="game-container">
+      <canvas id="gameCanvas" width="400" height="600" aria-label="Chaos and Flow driving game - Cairo streets"></canvas>
+
+      <!-- Dashboard with refined meters -->
+      <div class="dashboard">
+        <div class="meter-card flow-card">
+          <span class="meter-label">🌊 FLOW</span>
+          <span class="meter-value flow-value" id="flowValue">70</span>
+          <div class="meter-bar-bg">
+            <div class="meter-bar-fill flow-fill" id="flowBar" style="width: 70%;"></div>
+          </div>
+        </div>
+        <div class="meter-card threat-card">
+          <span class="meter-label">⚠️ THREAT</span>
+          <span class="meter-value threat-value" id="threatValue">20</span>
+          <div class="meter-bar-bg">
+            <div class="meter-bar-fill threat-fill" id="threatBar" style="width: 20%;"></div>
+          </div>
+        </div>
+        <div class="meter-card fines-card">
+          <span class="meter-label">💸 FINES</span>
+          <span class="meter-value fines-value" id="fineAmount">0</span>
+          <span style="font-size:0.7rem;color:#b8b0a0;">EGP</span>
+        </div>
       </div>
-      <button class="restart-btn" id="restartButton">↺</button>
-    </div>
-    <div style="color:#aaa9b3; font-size:0.7rem; margin-top:0.4rem; text-align:center;">
-      Tap horn • hold for long • steer through Cairo chaos
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="horn-btn" id="hornButton">
+          <span class="horn-icon">📢</span> HORN
+        </button>
+        <div class="steering">
+          <button class="arrow-btn" id="leftBtn">◀</button>
+          <button class="arrow-btn" id="rightBtn">▶</button>
+        </div>
+        <button class="restart-btn" id="restartButton">↻</button>
+      </div>
+      <div class="hint-text">📢 Tap horn • hold for long blast • weave through Cairo chaos</div>
     </div>
   </div>
-</div>
 
-<script>
-  (function() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+  <script>
+    (function() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
 
-    // UI elements
-    const flowSpan = document.getElementById('flowValue');
-    const threatSpan = document.getElementById('threatValue');
-    const fineSpan = document.getElementById('fineAmount');
+      // UI elements
+      const flowSpan = document.getElementById('flowValue');
+      const threatSpan = document.getElementById('threatValue');
+      const fineSpan = document.getElementById('fineAmount');
+      const flowBar = document.getElementById('flowBar');
+      const threatBar = document.getElementById('threatBar');
 
-    // ----- Game dimensions & constants -----
-    const W = canvas.width = 400;
-    const H = canvas.height = 600;
-    
-    // Player settings
-    const PLAYER_WIDTH = 38;
-    const PLAYER_HEIGHT = 62;
-    let playerX = W/2 - PLAYER_WIDTH/2;
-    const playerY = H - 110;  // fixed vertical position
-    
-    // Movement
-    let moveLeft = false;
-    let moveRight = false;
-    const BASE_SPEED = 4.2;
-    
-    // Game state
-    let flow = 70;            // 0-100, higher = better flow
-    let threat = 20;          // 0-100, higher = more danger / fines
-    let fines = 0;            // currency penalty
-    let gameActive = true;
-    let gameOverReason = null;
-    
-    // Horn states
-    let hornPressed = false;
-    let hornHoldTimer = 0;
-    const HORN_LONG_THRESHOLD = 28; // frames (~0.5 sec at 60fps)
-    let lastHornTapType = null; // 'short', 'double', 'long' for visual feedback
-    
-    // Traffic arrays
-    let vehicles = [];
-    let scooters = [];
-    let pedestrians = [];
-    let speedBumps = [];
-    
-    // Frame counter for spawn logic
-    let frame = 0;
-    
-    // ---- Helper: clamp ----
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
-    
-    // ---- Update meters and fines ----
-    function updateUI() {
-      flowSpan.textContent = Math.floor(clamp(flow, 0, 100));
-      threatSpan.textContent = Math.floor(clamp(threat, 0, 100));
-      fineSpan.textContent = Math.floor(fines);
-    }
-    
-    function addFlow(amount) {
-      flow = clamp(flow + amount, 0, 100);
-    }
-    
-    function addThreat(amount) {
-      threat = clamp(threat + amount, 0, 100);
-      if (threat >= 90) {
-        // High threat triggers automatic fine risk later, but we also apply fine if passing radars etc.
+      // ----- Game dimensions -----
+      const W = canvas.width = 400;
+      const H = canvas.height = 600;
+
+      // Player settings
+      const PLAYER_WIDTH = 40;
+      const PLAYER_HEIGHT = 64;
+      let playerX = W / 2 - PLAYER_WIDTH / 2;
+      const playerY = H - 115;
+
+      // Movement
+      let moveLeft = false;
+      let moveRight = false;
+
+      // Game state
+      let flow = 70;
+      let threat = 20;
+      let fines = 0;
+      let gameActive = true;
+      let gameOverReason = null;
+
+      // Horn states
+      let hornPressed = false;
+      let hornHoldTimer = 0;
+      const HORN_LONG_THRESHOLD = 28;
+      let lastHornTapType = null;
+
+      // Traffic arrays
+      let vehicles = [];
+      let scooters = [];
+      let pedestrians = [];
+      let speedBumps = [];
+
+      let frame = 0;
+
+      // ---- Helper ----
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
       }
-    }
-    
-    function applyFine(baseAmount) {
-      let multiplier = 1.0 + (threat / 120); // threat increases fines
-      let fine = Math.floor(baseAmount * multiplier);
-      fines += fine;
-      addThreat(4);  // fines raise tension
-    }
-    
-    // ---- Player collision & damage ----
-    function damagePlayer(severity = 1) {
-      addThreat(severity * 7);
-      flow = clamp(flow - (severity * 6), 0, 100);
-      if (threat >= 100) {
-        gameActive = false;
-        gameOverReason = "VEHICLE WRECKED · THREAT MAX";
+
+      // ---- Update UI ----
+      function updateUI() {
+        const f = Math.floor(clamp(flow, 0, 100));
+        const t = Math.floor(clamp(threat, 0, 100));
+        flowSpan.textContent = f;
+        threatSpan.textContent = t;
+        fineSpan.textContent = Math.floor(fines);
+        flowBar.style.width = f + '%';
+        threatBar.style.width = t + '%';
       }
-    }
-    
-    // ---- Collision detection AABB ----
-    function rectCollide(r1, r2) {
-      return !(r2.x > r1.x + r1.w || r2.x + r2.w < r1.x ||
-               r2.y > r1.y + r1.h || r2.y + r2.h < r1.y);
-    }
-    
-    // ---- NPC Classes ----
-    class Vehicle {
-      constructor(x, y, w, h, type, speedY) {
-        this.x = x; this.y = y;
-        this.w = w; this.h = h;
-        this.type = type; // 'microbus', 'sedan', 'taxi'
-        this.speedY = speedY;
-        this.active = true;
-        this.laneChangeCooldown = 0;
+
+      function addFlow(amount) { flow = clamp(flow + amount, 0, 100); }
+
+      function addThreat(amount) { threat = clamp(threat + amount, 0, 100); }
+
+      function applyFine(baseAmount) {
+        let multiplier = 1.0 + (threat / 120);
+        let fine = Math.floor(baseAmount * multiplier);
+        fines += fine;
+        addThreat(3);
       }
-      update() {
-        this.y += this.speedY;
-        // Microbus aggressive lateral movement
-        if (this.type === 'microbus' && frame % 12 === 0 && Math.random() < 0.25) {
-          this.x += (Math.random() - 0.5) * 5;
-          this.x = clamp(this.x, 15, W - this.w - 15);
+
+      function damagePlayer(severity = 1) {
+        addThreat(severity * 7);
+        flow = clamp(flow - (severity * 6), 0, 100);
+        if (threat >= 100) {
+          gameActive = false;
+          gameOverReason = "VEHICLE WRECKED · THREAT MAX";
         }
-        if (this.y > H + 80 || this.y < -80) this.active = false;
       }
-    }
-    
-    class Scooter {
-      constructor(x, y) {
-        this.x = x; this.y = y;
-        this.w = 18; this.h = 28;
-        this.speedY = 2.8 + Math.random() * 2.2;
-        this.wobble = Math.random() * 2;
-        this.active = true;
+
+      function rectCollide(r1, r2) {
+        return !(r2.x > r1.x + r1.w || r2.x + r2.w < r1.x ||
+          r2.y > r1.y + r1.h || r2.y + r2.h < r1.y);
       }
-      update() {
-        this.y += this.speedY;
-        this.x += Math.sin(frame * 0.2 + this.y) * 0.9;
-        this.x = clamp(this.x, 10, W - this.w - 10);
-        if (this.y > H + 60 || this.y < -60) this.active = false;
-      }
-    }
-    
-    class Pedestrian {
-      constructor(x, y, speedX) {
-        this.x = x; this.y = y;
-        this.w = 16; this.h = 24;
-        this.speedX = speedX; // crossing horizontal
-        this.active = true;
-      }
-      update() {
-        this.x += this.speedX;
-        this.y += 1.8; // slowly moving down with traffic flow illusion
-        if (this.x < -30 || this.x > W + 30 || this.y > H + 40) this.active = false;
-      }
-    }
-    
-    class SpeedBump {
-      constructor(x, y) {
-        this.x = x; this.y = y;
-        this.w = 50 + Math.random() * 30;
-        this.h = 8;
-        this.active = true;
-      }
-      update() {
-        this.y += 3.5; // same relative speed as environment
-        if (this.y > H + 40) this.active = false;
-      }
-    }
-    
-    // ---- Spawn logic (Dynamic Lane System feel) ----
-    function spawnTraffic() {
-      // Vehicles: sedans, microbuses
-      if (frame % 28 === 0 && vehicles.length < 14) {
-        let typeRand = Math.random();
-        let vType = typeRand < 0.45 ? 'microbus' : (typeRand < 0.8 ? 'sedan' : 'taxi');
-        let w = vType === 'microbus' ? 44 : 34;
-        let h = vType === 'microbus' ? 70 : 58;
-        let x = 30 + Math.random() * (W - w - 60);
-        let y = -70 - Math.random() * 70;
-        let speed = 2.4 + Math.random() * 2.0;
-        vehicles.push(new Vehicle(x, y, w, h, vType, speed));
-      }
-      
-      // Scooters (delivery)
-      if (frame % 35 === 0 && scooters.length < 8) {
-        let x = 20 + Math.random() * (W - 70);
-        scooters.push(new Scooter(x, -40 - Math.random()*50));
-      }
-      
-      // Pedestrians (jaywalkers)
-      if (frame % 50 === 0 && pedestrians.length < 7) {
-        let side = Math.random() < 0.5 ? -20 : W + 10;
-        let speedX = side < 0 ? 1.6 + Math.random()*1.4 : -(1.6 + Math.random()*1.4);
-        let y = 60 + Math.random() * 250;
-        pedestrians.push(new Pedestrian(side, y, speedX));
-      }
-      
-      // Speed bumps (Matat) randomly placed
-      if (frame % 70 === 0 && speedBumps.length < 4 && Math.random() < 0.7) {
-        let x = 25 + Math.random() * (W - 100);
-        speedBumps.push(new SpeedBump(x, -30));
-      }
-    }
-    
-    // ---- Horn Language Engine ----
-    function triggerHorn(type) {
-      if (!gameActive) return;
-      // type: 'short', 'double', 'long'
-      if (type === 'short') {
-        addFlow(2.2);
-        // signal AI blind spots: reduce threat slightly, push nearby vehicles away
-        for (let v of vehicles) {
-          if (Math.abs(v.x + v.w/2 - playerX - PLAYER_WIDTH/2) < 65 && v.y > playerY - 50 && v.y < playerY + 60) {
-            v.x += (v.x < playerX ? -4 : 4);
+
+      // ---- NPC Classes ----
+      class Vehicle {
+        constructor(x, y, w, h, type, speedY) {
+          this.x = x;
+          this.y = y;
+          this.w = w;
+          this.h = h;
+          this.type = type;
+          this.speedY = speedY;
+          this.active = true;
+          this.color = type === 'microbus' ? '#e8553d' : type === 'taxi' ? '#f7c948' : '#4a6fa5';
+          this.decalColor = type === 'microbus' ? '#ffe484' : '#ffffff';
+        }
+        update() {
+          this.y += this.speedY;
+          if (this.type === 'microbus' && frame % 10 === 0 && Math.random() < 0.3) {
+            this.x += (Math.random() - 0.5) * 6;
+            this.x = clamp(this.x, 12, W - this.w - 12);
           }
+          if (this.y > H + 90 || this.y < -90) this.active = false;
         }
-      } else if (type === 'double') {
-        addFlow(4.5);
-        // overtake maneuver: slower cars ahead give way
-        for (let v of vehicles) {
-          if (v.y > playerY - 70 && v.y < playerY + 40 && Math.abs(v.x + v.w/2 - playerX - PLAYER_WIDTH/2) < 70) {
-            if (v.speedY < 3.0) {
-              v.x += (v.x < playerX ? -7 : 7);
+      }
+
+      class Scooter {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.w = 20;
+          this.h = 30;
+          this.speedY = 2.6 + Math.random() * 2.4;
+          this.active = true;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += Math.sin(frame * 0.25 + this.y * 0.02) * 1.2;
+          this.x = clamp(this.x, 8, W - this.w - 8);
+          if (this.y > H + 70 || this.y < -70) this.active = false;
+        }
+      }
+
+      class Pedestrian {
+        constructor(x, y, speedX) {
+          this.x = x;
+          this.y = y;
+          this.w = 16;
+          this.h = 26;
+          this.speedX = speedX;
+          this.active = true;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += 1.6;
+          if (this.x < -35 || this.x > W + 35 || this.y > H + 45) this.active = false;
+        }
+      }
+
+      class SpeedBump {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.w = 45 + Math.random() * 35;
+          this.h = 9;
+          this.active = true;
+        }
+        update() {
+          this.y += 3.4;
+          if (this.y > H + 45) this.active = false;
+        }
+      }
+
+      // ---- Spawn logic ----
+      function spawnTraffic() {
+        if (frame % 24 === 0 && vehicles.length < 15) {
+          let typeRand = Math.random();
+          let vType = typeRand < 0.45 ? 'microbus' : (typeRand < 0.8 ? 'sedan' : 'taxi');
+          let w = vType === 'microbus' ? 46 : 36;
+          let h = vType === 'microbus' ? 72 : 60;
+          let x = 25 + Math.random() * (W - w - 50);
+          let y = -80 - Math.random() * 70;
+          let speed = 2.2 + Math.random() * 2.2;
+          vehicles.push(new Vehicle(x, y, w, h, vType, speed));
+        }
+
+        if (frame % 30 === 0 && scooters.length < 9) {
+          let x = 18 + Math.random() * (W - 70);
+          scooters.push(new Scooter(x, -45 - Math.random() * 55));
+        }
+
+        if (frame % 45 === 0 && pedestrians.length < 8) {
+          let side = Math.random() < 0.5 ? -22 : W + 12;
+          let speedX = side < 0 ? 1.5 + Math.random() * 1.6 : -(1.5 + Math.random() * 1.6);
+          let y = 50 + Math.random() * 280;
+          pedestrians.push(new Pedestrian(side, y, speedX));
+        }
+
+        if (frame % 65 === 0 && speedBumps.length < 4 && Math.random() < 0.65) {
+          let x = 20 + Math.random() * (W - 90);
+          speedBumps.push(new SpeedBump(x, -35));
+        }
+      }
+
+      // ---- Horn Language Engine ----
+      function triggerHorn(type) {
+        if (!gameActive) return;
+        if (type === 'short') {
+          addFlow(2.5);
+          for (let v of vehicles) {
+            if (Math.abs(v.x + v.w / 2 - playerX - PLAYER_WIDTH / 2) < 70 && v.y > playerY - 55 && v.y < playerY + 65) {
+              v.x += (v.x < playerX ? -5 : 5);
+            }
+          }
+        } else if (type === 'double') {
+          addFlow(5);
+          for (let v of vehicles) {
+            if (v.y > playerY - 75 && v.y < playerY + 45 && Math.abs(v.x + v.w / 2 - playerX - PLAYER_WIDTH / 2) < 75) {
+              if (v.speedY < 3.2) v.x += (v.x < playerX ? -9 : 9);
+            }
+          }
+        } else if (type === 'long') {
+          addFlow(4);
+          for (let p of pedestrians) {
+            if (Math.abs(p.x - playerX - PLAYER_WIDTH / 2) < 60 && p.y > playerY - 45 && p.y < playerY + 50) {
+              p.speedX *= 1.6;
+            }
+          }
+          for (let v of vehicles) {
+            if (rectCollide({ x: playerX, y: playerY - 15, w: PLAYER_WIDTH, h: PLAYER_HEIGHT + 20 }, { x: v.x, y: v.y, w: v.w,
+                h: v.h })) {
+              v.x += (v.x < playerX ? -11 : 11);
             }
           }
         }
-      } else if (type === 'long') {
-        addFlow(3.8);
-        // warn pedestrians/stationary obstacles
-        for (let p of pedestrians) {
-          if (Math.abs(p.x - playerX - PLAYER_WIDTH/2) < 55 && p.y > playerY - 40 && p.y < playerY + 45) {
-            p.speedX *= 1.5; // hurry away
-          }
-        }
-        // also slightly move vehicles blocking
-        for (let v of vehicles) {
-          if (rectCollide(
-            {x: playerX, y: playerY-15, w: PLAYER_WIDTH, h: PLAYER_HEIGHT+20},
-            {x: v.x, y: v.y, w: v.w, h: v.h}
-          )) {
-            v.x += (v.x < playerX ? -9 : 9);
-          }
-        }
       }
-    }
-    
-    // ---- Smart Radar & hazard checks ----
-    function checkRadarAndHazards() {
-      if (!gameActive) return;
-      // Simulate radars at certain y positions (invisible checkpoints)
-      let radarZones = [180, 280, 390, 500];
-      for (let zoneY of radarZones) {
-        if (Math.abs(playerY - zoneY) < 18 && frame % 15 === 0) {
-          // speeding condition: based on flow/threat metaphor (high speed = high flow but risk)
-          if (flow > 65 && Math.random() < 0.45) {
-            applyFine(28);
-            addThreat(3);
-          }
-          // erratic weaving detection (if player moved too much laterally)
-          if (Math.abs(playerX - (W/2 - PLAYER_WIDTH/2)) > 110 && Math.random() < 0.5) {
-            applyFine(22);
-          }
-        }
-      }
-      
-      // Speed bump collision
-      for (let bump of speedBumps) {
-        if (rectCollide(
-          {x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT},
-          {x: bump.x, y: bump.y, w: bump.w, h: bump.h}
-        )) {
-          damagePlayer(2.2);
-          applyFine(16);
-          bump.active = false; // remove after hit
-          addThreat(9);
-        }
-      }
-      
-      // Vehicle collisions
-      for (let v of vehicles) {
-        if (rectCollide(
-          {x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT},
-          {x: v.x, y: v.y, w: v.w, h: v.h}
-        )) {
-          damagePlayer(2.8);
-          applyFine(19);
-          // push apart
-          if (playerX < v.x + v.w/2) playerX -= 18;
-          else playerX += 18;
-          playerX = clamp(playerX, 5, W - PLAYER_WIDTH - 5);
-        }
-      }
-      
-      // Scooter collisions
-      for (let s of scooters) {
-        if (rectCollide(
-          {x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT},
-          {x: s.x, y: s.y, w: s.w, h: s.h}
-        )) {
-          damagePlayer(1.5);
-          applyFine(12);
-          s.active = false;
-        }
-      }
-      
-      // Pedestrian collision (severe)
-      for (let p of pedestrians) {
-        if (rectCollide(
-          {x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT},
-          {x: p.x, y: p.y, w: p.w, h: p.h}
-        )) {
-          damagePlayer(3.5);
-          applyFine(45);
-          p.active = false;
-          addThreat(14);
-        }
-      }
-    }
-    
-    // ---- Reset game ----
-    function restartGame() {
-      playerX = W/2 - PLAYER_WIDTH/2;
-      flow = 70;
-      threat = 20;
-      fines = 0;
-      gameActive = true;
-      gameOverReason = null;
-      vehicles = [];
-      scooters = [];
-      pedestrians = [];
-      speedBumps = [];
-      hornPressed = false;
-      hornHoldTimer = 0;
-      updateUI();
-    }
-    
-    // ---- Drawing (vibrant Egyptian style) ----
-    function drawRoad() {
-      // Asphalt texture
-      ctx.fillStyle = '#2a2f38';
-      ctx.fillRect(0, 0, W, H);
-      // Lane markings (visual only, dynamic)
-      ctx.strokeStyle = '#e3c878';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([28, 22]);
-      for (let laneX = 90; laneX < W; laneX += 95) {
-        ctx.beginPath();
-        ctx.moveTo(laneX, 0);
-        ctx.lineTo(laneX, H);
-        ctx.stroke();
-      }
-      ctx.setLineDash([]); // reset
-      // glowing flyover edges
-      ctx.strokeStyle = '#d4af37';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(8, 0, W-16, H);
-    }
-    
-    function drawPlayer() {
-      ctx.save();
-      ctx.shadowColor = '#ffbb2e';
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = '#1e2b3f';
-      ctx.fillRect(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
-      ctx.fillStyle = '#c99b2c';
-      ctx.fillRect(playerX+4, playerY-4, PLAYER_WIDTH-8, 10);
-      ctx.fillStyle = '#f5e7d3';
-      ctx.fillRect(playerX+6, playerY+8, 8, 12);
-      ctx.fillRect(playerX+PLAYER_WIDTH-14, playerY+8, 8, 12);
-      // windshield
-      ctx.fillStyle = '#aad4f0';
-      ctx.fillRect(playerX+5, playerY-2, PLAYER_WIDTH-10, 14);
-      ctx.restore();
-    }
-    
-    function drawVehicles() {
-      for (let v of vehicles) {
-        ctx.fillStyle = v.type === 'microbus' ? '#d94f2b' : (v.type === 'taxi' ? '#f5c542' : '#3d5a80');
-        ctx.fillRect(v.x, v.y, v.w, v.h);
-        ctx.fillStyle = '#222';
-        ctx.fillRect(v.x+4, v.y-4, v.w-8, 8);
-        if (v.type === 'microbus') {
-          ctx.fillStyle = '#f7e358';
-          ctx.fillRect(v.x+8, v.y+10, 6, 20);
-        }
-      }
-    }
-    
-    function drawScooters() {
-      for (let s of scooters) {
-        ctx.fillStyle = '#e06b3c';
-        ctx.fillRect(s.x, s.y, s.w, s.h);
-        ctx.fillStyle = '#442211';
-        ctx.fillRect(s.x+2, s.y-3, 5, 8);
-      }
-    }
-    
-    function drawPedestrians() {
-      for (let p of pedestrians) {
-        ctx.fillStyle = '#b58b6b';
-        ctx.fillRect(p.x, p.y, p.w, p.h);
-        ctx.fillStyle = '#2c1810';
-        ctx.fillRect(p.x+2, p.y-3, 12, 6);
-      }
-    }
-    
-    function drawSpeedBumps() {
-      for (let b of speedBumps) {
-        ctx.fillStyle = '#5a4a3a';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.fillStyle = '#dbb45c';
-        for (let i=0;i<b.w;i+=12) {
-          ctx.fillRect(b.x+i, b.y, 6, 4);
-        }
-      }
-    }
-    
-    function drawUIOverlay() {
-      if (!gameActive) {
-        ctx.globalAlpha = 0.8;
-        ctx.fillStyle = '#0a0a14';
-        ctx.fillRect(0, H/2-40, W, 70);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = '#f2c94c';
-        ctx.font = 'bold 18px "Cairo", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(gameOverReason || 'GAME OVER', W/2, H/2+5);
-      }
-    }
-    
-    // ---- Game Loop ----
-    function update() {
-      if (!gameActive) {
-        updateUI();
-        return;
-      }
-      
-      // Player movement
-      if (moveLeft) playerX -= 5.2;
-      if (moveRight) playerX += 5.2;
-      playerX = clamp(playerX, 8, W - PLAYER_WIDTH - 8);
-      
-      // Horn hold detection
-      if (hornPressed) {
-        hornHoldTimer++;
-        if (hornHoldTimer === HORN_LONG_THRESHOLD) {
-          triggerHorn('long');
-          lastHornTapType = 'long';
-        }
-      }
-      
-      // Update all entities
-      for (let v of vehicles) v.update();
-      for (let s of scooters) s.update();
-      for (let p of pedestrians) p.update();
-      for (let b of speedBumps) b.update();
-      
-      // Remove inactive
-      vehicles = vehicles.filter(v => v.active);
-      scooters = scooters.filter(s => s.active);
-      pedestrians = pedestrians.filter(p => p.active);
-      speedBumps = speedBumps.filter(b => b.active);
-      
-      spawnTraffic();
-      checkRadarAndHazards();
-      
-      // Passive flow decay / threat normalization
-      flow = clamp(flow - 0.08, 0, 100);
-      threat = clamp(threat - 0.12, 5, 100);
-      
-      updateUI();
-      frame++;
-    }
-    
-    function draw() {
-      drawRoad();
-      drawSpeedBumps();
-      drawPedestrians();
-      drawScooters();
-      drawVehicles();
-      drawPlayer();
-      drawUIOverlay();
-    }
-    
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
-    }
-    
-    // ---- Event Listeners (mobile + desktop) ----
-    function bindEvents() {
-      const leftBtn = document.getElementById('leftBtn');
-      const rightBtn = document.getElementById('rightBtn');
-      const hornBtn = document.getElementById('hornButton');
-      const restartBtn = document.getElementById('restartButton');
-      
-      // Steering
-      leftBtn.addEventListener('mousedown', (e) => { e.preventDefault(); moveLeft = true; });
-      leftBtn.addEventListener('mouseup', () => { moveLeft = false; });
-      leftBtn.addEventListener('mouseleave', () => { moveLeft = false; });
-      leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft = true; });
-      leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); moveLeft = false; });
-      
-      rightBtn.addEventListener('mousedown', (e) => { e.preventDefault(); moveRight = true; });
-      rightBtn.addEventListener('mouseup', () => { moveRight = false; });
-      rightBtn.addEventListener('mouseleave', () => { moveRight = false; });
-      rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveRight = true; });
-      rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); moveRight = false; });
-      
-      // Horn button (tap/hold)
-      function startHorn(e) {
-        e.preventDefault();
+
+      // ---- Radar & hazards ----
+      function checkRadarAndHazards() {
         if (!gameActive) return;
-        hornPressed = true;
-        hornHoldTimer = 0;
-        lastHornTapType = null;
-      }
-      function endHorn(e) {
-        e.preventDefault();
-        if (!hornPressed) return;
-        hornPressed = false;
-        if (hornHoldTimer < HORN_LONG_THRESHOLD) {
-          // short tap logic, detect double tap manually via timing
-          if (!window.lastHornTime || Date.now() - window.lastHornTime > 380) {
-            triggerHorn('short');
-            window.lastHornTime = Date.now();
-          } else {
-            triggerHorn('double');
-            window.lastHornTime = 0; // reset after double
+        let radarZones = [170, 280, 400, 510];
+        for (let zoneY of radarZones) {
+          if (Math.abs(playerY - zoneY) < 20 && frame % 12 === 0) {
+            if (flow > 60 && Math.random() < 0.4) applyFine(30);
+            if (Math.abs(playerX - (W / 2 - PLAYER_WIDTH / 2)) > 115 && Math.random() < 0.45) applyFine(24);
           }
         }
-        hornHoldTimer = 0;
+
+        for (let bump of speedBumps) {
+          if (rectCollide({ x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT }, { x: bump.x, y: bump.y, w: bump.w,
+              h: bump.h })) {
+            damagePlayer(2.5);
+            applyFine(18);
+            bump.active = false;
+            addThreat(10);
+          }
+        }
+
+        for (let v of vehicles) {
+          if (rectCollide({ x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT }, { x: v.x, y: v.y, w: v.w, h: v.h })) {
+            damagePlayer(3);
+            applyFine(20);
+            if (playerX < v.x + v.w / 2) playerX -= 20;
+            else playerX += 20;
+            playerX = clamp(playerX, 6, W - PLAYER_WIDTH - 6);
+          }
+        }
+
+        for (let s of scooters) {
+          if (rectCollide({ x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT }, { x: s.x, y: s.y, w: s.w, h: s.h })) {
+            damagePlayer(1.8);
+            applyFine(14);
+            s.active = false;
+          }
+        }
+
+        for (let p of pedestrians) {
+          if (rectCollide({ x: playerX, y: playerY, w: PLAYER_WIDTH, h: PLAYER_HEIGHT }, { x: p.x, y: p.y, w: p.w, h: p.h })) {
+            damagePlayer(3.8);
+            applyFine(50);
+            p.active = false;
+            addThreat(15);
+          }
+        }
       }
-      
-      hornBtn.addEventListener('mousedown', startHorn);
-      hornBtn.addEventListener('mouseup', endHorn);
-      hornBtn.addEventListener('mouseleave', endHorn);
-      hornBtn.addEventListener('touchstart', startHorn);
-      hornBtn.addEventListener('touchend', endHorn);
-      
-      restartBtn.addEventListener('click', () => restartGame());
-      restartBtn.addEventListener('touchstart', (e) => { e.preventDefault(); restartGame(); });
-      
-      // Prevent canvas touch scrolling
-      canvas.addEventListener('touchstart', (e) => e.preventDefault());
-    }
-    
-    window.lastHornTime = 0;
-    bindEvents();
-    restartGame(); // initial state
-    gameLoop();
-  })();
-</script>
+
+      // ---- Reset ----
+      function restartGame() {
+        playerX = W / 2 - PLAYER_WIDTH / 2;
+        flow = 70;
+        threat = 20;
+        fines = 0;
+        gameActive = true;
+        gameOverReason = null;
+        vehicles = [];
+        scooters = [];
+        pedestrians = [];
+        speedBumps = [];
+        hornPressed = false;
+        hornHoldTimer = 0;
+        updateUI();
+      }
+
+      // ---- Drawing (enhanced visuals) ----
+      function drawRoad() {
+        // Asphalt with subtle gradient
+        let asphaltGrad = ctx.createLinearGradient(0, 0, 0, H);
+        asphaltGrad.addColorStop(0, '#252d38');
+        asphaltGrad.addColorStop(0.5, '#1f2730');
+        asphaltGrad.addColorStop(1, '#1a2129');
+        ctx.fillStyle = asphaltGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Road texture noise
+        ctx.fillStyle = 'rgba(255,255,255,0.02)';
+        for (let i = 0; i < 30; i++) {
+          ctx.fillRect(Math.random() * W, Math.random() * H, Math.random() * 20 + 5, 1);
+        }
+
+        // Dynamic lane markings (visual only)
+        ctx.strokeStyle = '#e8d58a';
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([26, 20]);
+        ctx.globalAlpha = 0.7;
+        for (let laneX = 85; laneX < W; laneX += 100) {
+          ctx.beginPath();
+          ctx.moveTo(laneX, 0);
+          ctx.lineTo(laneX, H);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+
+        // Golden edge lines
+        ctx.strokeStyle = 'rgba(212,168,68,0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(6, 0, W - 12, H);
+
+        // Glow effect on edges
+        ctx.shadowColor = 'rgba(212,168,68,0.3)';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#d4a844';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(6, 0, W - 12, H);
+        ctx.shadowBlur = 0;
+      }
+
+      function drawPlayer() {
+        ctx.save();
+        // Shadow
+        ctx.shadowColor = 'rgba(255,180,40,0.6)';
+        ctx.shadowBlur = 15;
+        // Body
+        let bodyGrad = ctx.createLinearGradient(playerX, playerY, playerX, playerY + PLAYER_HEIGHT);
+        bodyGrad.addColorStop(0, '#2c3e50');
+        bodyGrad.addColorStop(1, '#1a252f');
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(playerX, playerY, PLAYER_WIDTH, PLAYER_HEIGHT);
+        // Roof
+        ctx.fillStyle = '#c9a03a';
+        ctx.fillRect(playerX + 4, playerY - 6, PLAYER_WIDTH - 8, 12);
+        // Windshield
+        ctx.fillStyle = '#a8d8ea';
+        ctx.fillRect(playerX + 5, playerY - 1, PLAYER_WIDTH - 10, 12);
+        // Windows
+        ctx.fillStyle = '#6bb3c9';
+        ctx.fillRect(playerX + 6, playerY + 10, 9, 14);
+        ctx.fillRect(playerX + PLAYER_WIDTH - 15, playerY + 10, 9, 14);
+        // Headlights
+        ctx.fillStyle = '#ffeaa7';
+        ctx.fillRect(playerX + 2, playerY + 4, 6, 6);
+        ctx.fillRect(playerX + PLAYER_WIDTH - 8, playerY + 4, 6, 6);
+        ctx.restore();
+      }
+
+      function drawVehicles() {
+        for (let v of vehicles) {
+          ctx.fillStyle = v.color;
+          ctx.fillRect(v.x, v.y, v.w, v.h);
+          // Roof
+          ctx.fillStyle = '#222831';
+          ctx.fillRect(v.x + 4, v.y - 5, v.w - 8, 10);
+          // Windows
+          ctx.fillStyle = '#87ceeb';
+          ctx.fillRect(v.x + 5, v.y + 6, v.w - 10, 16);
+          // Decals for microbus
+          if (v.type === 'microbus') {
+            ctx.fillStyle = v.decalColor;
+            ctx.fillRect(v.x + 8, v.y + 24, 8, 20);
+            ctx.fillRect(v.x + v.w - 16, v.y + 24, 8, 20);
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillRect(v.x + 6, v.y + 30, 6, 6);
+          }
+          // Taxi sign
+          if (v.type === 'taxi') {
+            ctx.fillStyle = '#f7dc6f';
+            ctx.fillRect(v.x + v.w / 2 - 8, v.y - 5, 16, 5);
+          }
+        }
+      }
+
+      function drawScooters() {
+        for (let s of scooters) {
+          ctx.fillStyle = '#e67e3a';
+          ctx.fillRect(s.x, s.y, s.w, s.h);
+          ctx.fillStyle = '#3d1c0a';
+          ctx.fillRect(s.x + 3, s.y - 4, 6, 10);
+          ctx.fillStyle = '#f5c842';
+          ctx.fillRect(s.x + 1, s.y + 6, 4, 4);
+        }
+      }
+
+      function drawPedestrians() {
+        for (let p of pedestrians) {
+          ctx.fillStyle = '#c49a6c';
+          ctx.fillRect(p.x, p.y, p.w, p.h);
+          ctx.fillStyle = '#3d2314';
+          ctx.fillRect(p.x + 3, p.y - 4, 10, 8);
+          ctx.fillStyle = '#e8c99b';
+          ctx.fillRect(p.x + 4, p.y + 10, 8, 6);
+        }
+      }
+
+      function drawSpeedBumps() {
+        for (let b of speedBumps) {
+          ctx.fillStyle = '#5c4a3a';
+          ctx.fillRect(b.x, b.y, b.w, b.h);
+          ctx.fillStyle = '#e8c96e';
+          for (let i = 0; i < b.w; i += 14) {
+            ctx.fillRect(b.x + i, b.y + 1, 8, 5);
+          }
+          ctx.fillStyle = 'rgba(255,200,50,0.4)';
+          ctx.fillRect(b.x, b.y - 2, b.w, 2);
+        }
+      }
+
+      function drawUIOverlay() {
+        if (!gameActive) {
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = '#0a0d14';
+          ctx.fillRect(0, H / 2 - 45, W, 80);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#f2c94c';
+          ctx.font = 'bold 20px "Cairo", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 10;
+          ctx.fillText(gameOverReason || 'GAME OVER', W / 2, H / 2 + 8);
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // ---- Game Loop ----
+      function update() {
+        if (!gameActive) {
+          updateUI();
+          return;
+        }
+
+        if (moveLeft) playerX -= 5.4;
+        if (moveRight) playerX += 5.4;
+        playerX = clamp(playerX, 8, W - PLAYER_WIDTH - 8);
+
+        if (hornPressed) {
+          hornHoldTimer++;
+          if (hornHoldTimer === HORN_LONG_THRESHOLD) {
+            triggerHorn('long');
+            lastHornTapType = 'long';
+          }
+        }
+
+        for (let v of vehicles) v.update();
+        for (let s of scooters) s.update();
+        for (let p of pedestrians) p.update();
+        for (let b of speedBumps) b.update();
+
+        vehicles = vehicles.filter(v => v.active);
+        scooters = scooters.filter(s => s.active);
+        pedestrians = pedestrians.filter(p => p.active);
+        speedBumps = speedBumps.filter(b => b.active);
+
+        spawnTraffic();
+        checkRadarAndHazards();
+
+        flow = clamp(flow - 0.06, 0, 100);
+        threat = clamp(threat - 0.1, 3, 100);
+
+        updateUI();
+        frame++;
+      }
+
+      function draw() {
+        drawRoad();
+        drawSpeedBumps();
+        drawPedestrians();
+        drawScooters();
+        drawVehicles();
+        drawPlayer();
+        drawUIOverlay();
+      }
+
+      function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      // ---- Events ----
+      function bindEvents() {
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const hornBtn = document.getElementById('hornButton');
+        const restartBtn = document.getElementById('restartButton');
+
+        leftBtn.addEventListener('mousedown', (e) => { e.preventDefault();
+          moveLeft = true; });
+        leftBtn.addEventListener('mouseup', () => { moveLeft = false; });
+        leftBtn.addEventListener('mouseleave', () => { moveLeft = false; });
+        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault();
+          moveLeft = true; });
+        leftBtn.addEventListener('touchend', (e) => { e.preventDefault();
+          moveLeft = false; });
+
+        rightBtn.addEventListener('mousedown', (e) => { e.preventDefault();
+          moveRight = true; });
+        rightBtn.addEventListener('mouseup', () => { moveRight = false; });
+        rightBtn.addEventListener('mouseleave', () => { moveRight = false; });
+        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault();
+          moveRight = true; });
+        rightBtn.addEventListener('touchend', (e) => { e.preventDefault();
+          moveRight = false; });
+
+        function startHorn(e) {
+          e.preventDefault();
+          if (!gameActive) return;
+          hornPressed = true;
+          hornHoldTimer = 0;
+          lastHornTapType = null;
+        }
+
+        function endHorn(e) {
+          e.preventDefault();
+          if (!hornPressed) return;
+          hornPressed = false;
+          if (hornHoldTimer < HORN_LONG_THRESHOLD) {
+            if (!window.lastHornTime || Date.now() - window.lastHornTime > 380) {
+              triggerHorn('short');
+              window.lastHornTime = Date.now();
+            } else {
+              triggerHorn('double');
+              window.lastHornTime = 0;
+            }
+          }
+          hornHoldTimer = 0;
+        }
+
+        hornBtn.addEventListener('mousedown', startHorn);
+        hornBtn.addEventListener('mouseup', endHorn);
+        hornBtn.addEventListener('mouseleave', endHorn);
+        hornBtn.addEventListener('touchstart', startHorn);
+        hornBtn.addEventListener('touchend', endHorn);
+
+        restartBtn.addEventListener('click', () => restartGame());
+        restartBtn.addEventListener('touchstart', (e) => { e.preventDefault();
+          restartGame(); });
+
+        canvas.addEventListener('touchstart', (e) => e.preventDefault());
+      }
+
+      window.lastHornTime = 0;
+      bindEvents();
+      restartGame();
+      gameLoop();
+    })();
+  </script>
 </body>
 </html>
 ```
+
+Game Features
+
+Here’s how the interface translates the high-stakes Cairo driving into the screen controls and meters you see, making the chaotic action feel immediate.
+
+· Meter Cards & Feedback: The Flow, Threat, and Fines are displayed as distinct cards with numeric values, progress bars, and color-coded accents (green, red, gold). As you play, these meters visually pulse and fill, giving you real-time feedback on your performance and risk level.
+· Steering & Horn Controls: Large, tactile arrow buttons handle left/right movement. The prominent Horn button supports multiple inputs: a short tap signals presence, a double-tap initiates an overtake, and a long press warns pedestrians. The visual "press" effect provides clear feedback.
+· Visual Atmosphere: The interface uses a dark, gold-accented panel with a subtle glow, evoking a modern, high-stakes Egyptian aesthetic. The canvas itself features dynamic lane markings and a glowing road edge, reinforcing the "smart radar" and urban driving theme.
+· Game Over & Restart: A clear overlay appears when the vehicle is wrecked, and a dedicated restart button lets you instantly reset the entire traffic simulation.
