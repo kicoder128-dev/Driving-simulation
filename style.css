@@ -1,0 +1,151 @@
+/* ==========================================================================
+   Cairo Chaos - Main Stylesheet
+   ========================================================================== */
+
+/* Base Styles
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #222;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Header
+   ========================================================================== */
+header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+h1 {
+    margin: 5px 0 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #f39c12;
+    text-shadow: 2px 2px #000;
+}
+
+.subtitle {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+/* Game Container
+   ========================================================================== */
+#gameContainer {
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+canvas {
+    background: #3a3a3a;
+    display: block;
+    border: 4px solid #f39c12;
+    border-radius: 4px;
+}
+
+/* HUD Layer
+   ========================================================================== */
+.ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 18px;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px #000;
+}
+
+.hud-item {
+    padding: 5px 10px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Game Over Screen
+   ========================================================================== */
+#gameOverScreen {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    backdrop-filter: blur(2px);
+}
+
+#gameOverScreen h2 {
+    color: #e74c3c;
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.crash-reason {
+    color: #bbb;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* Buttons
+   ========================================================================== */
+button {
+    background: #f39c12;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 15px;
+    transition: background 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+button:hover {
+    background: #e67e22;
+}
+
+button:focus {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Controls Hint
+   ========================================================================== */
+.controls-hint {
+    margin-top: 10px;
+    color: #aaa;
+    font-size: 14px;
+    text-align: center;
+}
+
+kbd {
+    background: #444;
+    border: 1px solid #666;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: monospace;
+}
