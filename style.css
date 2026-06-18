@@ -1,64 +1,91 @@
 /* ==========================================================================
-   Cairo Chaos - Main Stylesheet
+   Cairo Chaos - Mobile-First Responsive Stylesheet
    ========================================================================== */
 
-/* Base Styles
-   ========================================================================== */
+/* CSS Variables for Theming */
+:root {
+    --primary-color: #f39c12;
+    --secondary-color: #e74c3c;
+    --bg-dark: #222;
+    --road-color: #3a3a3a;
+    --shoulder-color: #cca673;
+    --text-light: #fff;
+    --text-muted: #aaa;
+    --horn-ready: #2ecc71;
+    --horn-reload: #e74c3c;
+}
+
+/* Reset & Base Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 body {
-    background: #222;
-    color: #fff;
+    background: var(--bg-dark);
+    color: var(--text-light);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    overflow: hidden;
+    min-height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
-/* Header
-   ========================================================================== */
+/* Header */
 header {
     text-align: center;
     margin-bottom: 5px;
+    padding: 0 10px;
 }
 
 h1 {
     margin: 5px 0 0;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: #f39c12;
+    color: var(--primary-color);
     text-shadow: 2px 2px #000;
+    font-size: clamp(1.5rem, 5vw, 2rem);
 }
 
 .subtitle {
-    color: #aaa;
-    font-size: 14px;
+    color: var(--text-muted);
+    font-size: clamp(0.8rem, 3vw, 1rem);
     margin-bottom: 5px;
 }
 
-/* Game Container
-   ========================================================================== */
+/* Game Container - Responsive */
 #gameContainer {
     position: relative;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    max-width: 95vw;
+    max-height: 70vh;
+    max-height: 70dvh;
 }
 
 canvas {
-    background: #3a3a3a;
+    background: var(--road-color);
     display: block;
-    border: 4px solid #f39c12;
+    border: 4px solid var(--primary-color);
     border-radius: 4px;
+    width: 100%;
+    height: auto;
+    max-width: 450px;
 }
 
-/* HUD Layer
-   ========================================================================== */
+/* HUD Layer */
 .ui-layer {
     position: absolute;
     top: 10px;
@@ -67,19 +94,67 @@ canvas {
     display: flex;
     justify-content: space-between;
     font-weight: bold;
-    font-size: 18px;
+    font-size: clamp(12px, 3vw, 18px);
     pointer-events: none;
     text-shadow: 1px 1px 2px #000;
+    z-index: 10;
 }
 
 .hud-item {
     padding: 5px 10px;
     border-radius: 3px;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
 }
 
-/* Game Over Screen
-   ========================================================================== */
+/* Mobile Controls */
+.mobile-controls {
+    display: none; /* Hidden by default, shown on mobile */
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+    z-index: 20;
+}
+
+.mobile-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(243, 156, 18, 0.7);
+    border: 2px solid var(--primary-color);
+    color: var(--text-light);
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s, background 0.2s;
+}
+
+.mobile-btn:active {
+    transform: scale(0.9);
+    background: rgba(243, 156, 18, 1);
+}
+
+.horn-btn {
+    width: 70px;
+    height: 70px;
+    background: rgba(231, 76, 60, 0.7);
+    border-color: var(--secondary-color);
+    font-size: 28px;
+}
+
+.horn-btn:active {
+    background: rgba(231, 76, 60, 1);
+}
+
+/* Game Over Screen */
 #gameOverScreen {
     display: none;
     position: absolute;
@@ -93,12 +168,21 @@ canvas {
     justify-content: center;
     text-align: center;
     backdrop-filter: blur(2px);
+    z-index: 30;
+    border-radius: 4px;
 }
 
 #gameOverScreen h2 {
-    color: #e74c3c;
-    font-size: 40px;
+    color: var(--secondary-color);
+    font-size: clamp(1.5rem, 8vw, 2.5rem);
     margin-bottom: 10px;
+    text-shadow: 2px 2px #000;
+}
+
+#gameOverScreen p {
+    margin: 5px 0;
+    font-size: clamp(0.9rem, 4vw, 1.2rem);
+    padding: 0 20px;
 }
 
 .crash-reason {
@@ -107,39 +191,46 @@ canvas {
     margin-top: 10px;
 }
 
-/* Buttons
-   ========================================================================== */
-button {
-    background: #f39c12;
-    color: #fff;
+/* Buttons */
+.retry-btn {
+    background: var(--primary-color);
+    color: var(--text-light);
     border: none;
-    padding: 12px 24px;
-    font-size: 18px;
+    padding: clamp(10px, 2vw, 12px) clamp(20px, 4vw, 24px);
+    font-size: clamp(16px, 4vw, 18px);
     font-weight: bold;
     cursor: pointer;
     border-radius: 5px;
     margin-top: 15px;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.1s;
     text-transform: uppercase;
     letter-spacing: 1px;
+    touch-action: manipulation;
 }
 
-button:hover {
+.retry-btn:hover {
     background: #e67e22;
 }
 
-button:focus {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
+.retry-btn:active {
+    transform: scale(0.95);
 }
 
-/* Controls Hint
-   ========================================================================== */
+/* Controls Hint Footer */
 .controls-hint {
     margin-top: 10px;
-    color: #aaa;
-    font-size: 14px;
+    color: var(--text-muted);
+    font-size: clamp(12px, 3vw, 14px);
     text-align: center;
+    padding: 0 10px;
+}
+
+.desktop-controls {
+    display: block;
+}
+
+.mobile-controls-hint {
+    display: none;
 }
 
 kbd {
@@ -148,4 +239,66 @@ kbd {
     border-radius: 3px;
     padding: 2px 6px;
     font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* Responsive Design - Mobile Devices */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: flex;
+    }
+    
+    .desktop-controls {
+        display: none;
+    }
+    
+    .mobile-controls-hint {
+        display: block;
+    }
+    
+    #gameContainer {
+        max-width: 98vw;
+        max-height: 65vh;
+        max-height: 65dvh;
+    }
+    
+    canvas {
+        max-width: 100%;
+    }
+}
+
+/* Landscape Mode Adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+    #gameContainer {
+        max-height: 80vh;
+        max-height: 80dvh;
+    }
+    
+    canvas {
+        max-height: 70vh;
+        max-height: 70dvh;
+    }
+    
+    .mobile-controls {
+        bottom: 5px;
+    }
+    
+    .mobile-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .horn-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+}
+
+/* High-DPI Screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    canvas {
+        image-rendering: auto;
+    }
 }
