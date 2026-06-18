@@ -2,68 +2,584 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Cairo Chaos: Traffic Survival - Navigate through chaotic Cairo traffic in this browser game">
-    <meta name="keywords" content="game, cairo, traffic, survival, html5, canvas, mobile">
-    <meta name="author" content="Your Name">
-    <meta name="theme-color" content="#f39c12">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Cairo Chaos: Traffic Survival Game">
     <title>Cairo Chaos: Traffic Survival</title>
-    
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #222;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        h1 {
+            margin: 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #f39c12;
+            text-shadow: 2px 2px #000;
+            font-size: 24px;
+        }
+
+        #gameContainer {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        canvas {
+            background: #3a3a3a;
+            display: block;
+            border: 4px solid #f39c12;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 450px;
+            height: auto;
+        }
+
+        .ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 16px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px #000;
+            z-index: 10;
+        }
+
+        .hud-item {
+            padding: 5px 10px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 20;
+        }
+
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(243, 156, 18, 0.7);
+            border: 2px solid #f39c12;
+            color: #fff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: transform 0.1s;
+        }
+
+        .mobile-btn:active {
+            transform: scale(0.9);
+            background: rgba(243, 156, 18, 1);
+        }
+
+        .horn-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(231, 76, 60, 0.7);
+            border-color: #e74c3c;
+            font-size: 28px;
+        }
+
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 30;
+            border-radius: 4px;
+        }
+
+        #gameOverScreen h2 {
+            color: #e74c3c;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        #gameOverScreen p {
+            margin: 5px 0;
+            padding: 0 20px;
+        }
+
+        button {
+            background: #f39c12;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 15px;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: #e67e22;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .controls-hint {
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 12px;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        kbd {
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+        }
+
+        @media (min-width: 769px) {
+            .mobile-controls {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Cairo Chaos</h1>
-        <p class="subtitle">Traffic Survival</p>
-    </header>
-
-    <main id="gameContainer">
-        <canvas id="gameCanvas" width="450" height="600" aria-label="Cairo Chaos game canvas"></canvas>
+    <h1>🚗 Cairo Chaos</h1>
+    
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="450" height="600"></canvas>
         
-        <!-- HUD Layer -->
         <div class="ui-layer">
             <div id="scoreBox" class="hud-item">Score: 0</div>
             <div id="hornBox" class="hud-item">Horn: READY</div>
         </div>
 
-        <!-- Mobile Controls -->
-        <div id="mobileControls" class="mobile-controls">
-            <button class="mobile-btn left-btn" id="leftBtn" aria-label="Move Left">
-                <span>◀</span>
-            </button>
-            <button class="mobile-btn horn-btn" id="hornBtn" aria-label="Honk Horn">
-                <span>📢</span>
-            </button>
-            <button class="mobile-btn right-btn" id="rightBtn" aria-label="Move Right">
-                <span>▶</span>
-            </button>
+        <div class="mobile-controls">
+            <button class="mobile-btn" id="leftBtn">◀</button>
+            <button class="mobile-btn horn-btn" id="hornBtn">📢</button>
+            <button class="mobile-btn" id="rightBtn">▶</button>
         </div>
 
-        <!-- Game Over Screen -->
-        <div id="gameOverScreen" role="dialog" aria-labelledby="gameOverTitle">
-            <h2 id="gameOverTitle">YALAHWI! Crash!</h2>
+        <div id="gameOverScreen">
+            <h2>YALAHWI! Crash!</h2>
             <p id="finalScore">You survived 0 meters.</p>
-            <p class="crash-reason" id="crashReason"></p>
-            <button onclick="resetGame()" class="retry-btn" aria-label="Try again">
-                Try Again
-            </button>
+            <p style="color: #bbb; font-style: italic;" id="crashReason"></p>
+            <button onclick="resetGame()">Try Again</button>
         </div>
-    </main>
+    </div>
 
-    <footer class="controls-hint">
-        <div class="desktop-controls">
+    <div class="controls-hint">
+        <span class="desktop-hint">
             <strong>Desktop:</strong> 
-            <kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd>/<kbd>D</kbd> to weave. 
+            <kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd>/<kbd>D</kbd> to move. 
             <kbd>SPACE</kbd> to Honk
-        </div>
-        <div class="mobile-controls-hint">
-            <strong>Mobile:</strong> Use buttons below game to control
-        </div>
-    </footer>
+        </span>
+        <span class="mobile-hint" style="display:none;">
+            <strong>Mobile:</strong> Use buttons to play
+        </span>
+    </div>
 
-    <script src="js/game.js"></script>
+    <script>
+        // Show/hide mobile hints
+        if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            document.querySelector('.desktop-hint').style.display = 'none';
+            document.querySelector('.mobile-hint').style.display = 'inline';
+        }
+
+        // ====================================================================
+        // GAME START
+        // ====================================================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // DOM elements
+        const scoreBox = document.getElementById('scoreBox');
+        const hornBox = document.getElementById('hornBox');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScore = document.getElementById('finalScore');
+        const crashReason = document.getElementById('crashReason');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const hornBtn = document.getElementById('hornBtn');
+
+        // Game state
+        let gameActive = true;
+        let score = 0;
+        let roadY = 0;
+        let animationId = null;
+        let spawnTimer = null;
+        
+        // Player
+        const player = {
+            x: 200,
+            y: 480,
+            width: 40,
+            height: 70,
+            color: '#3498db',
+            hornActive: false,
+            hornRadius: 0,
+            hornCooldown: 0
+        };
+
+        // Enemies array
+        let enemies = [];
+        
+        // Input state
+        const keys = {};
+        let mobileLeft = false;
+        let mobileRight = false;
+        let mobileHorn = false;
+
+        // Enemy types
+        const enemyTypes = [
+            { type: 'microbus', color: '#f1c40f', width: 45, height: 85, speed: 3 },
+            { type: 'scooter', color: '#e74c3c', width: 20, height: 40, speed: 10 },
+            { type: 'oldSedan', color: '#95a5a6', width: 40, height: 70, speed: 4 }
+        ];
+
+        // ====================================================================
+        // EVENT LISTENERS
+        // ====================================================================
+        
+        // Keyboard
+        window.addEventListener('keydown', function(e) {
+            keys[e.code] = true;
+            if (['ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('keyup', function(e) {
+            keys[e.code] = false;
+        });
+
+        // Mobile controls
+        function addMobileListeners(btn, setTrue, setFalse) {
+            btn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                setTrue();
+            });
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                setFalse();
+            });
+            btn.addEventListener('touchcancel', function() {
+                setFalse();
+            });
+            btn.addEventListener('mousedown', function() {
+                setTrue();
+            });
+            btn.addEventListener('mouseup', function() {
+                setFalse();
+            });
+            btn.addEventListener('mouseleave', function() {
+                setFalse();
+            });
+        }
+
+        addMobileListeners(leftBtn, 
+            () => { mobileLeft = true; }, 
+            () => { mobileLeft = false; }
+        );
+        addMobileListeners(rightBtn, 
+            () => { mobileRight = true; }, 
+            () => { mobileRight = false; }
+        );
+        addMobileListeners(hornBtn, 
+            () => { mobileHorn = true; }, 
+            () => { mobileHorn = false; }
+        );
+
+        // ====================================================================
+        // GAME FUNCTIONS
+        // ====================================================================
+        
+        function spawnEnemy() {
+            if (!gameActive) return;
+            
+            const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            const x = Math.random() * (canvas.width - type.width - 40) + 20;
+            
+            enemies.push({
+                x: x,
+                y: -100,
+                width: type.width,
+                height: type.height,
+                color: type.color,
+                speed: type.speed,
+                type: type.type,
+                behaviorTimer: Math.random() * 100 + 50,
+                isStopping: false
+            });
+
+            if (gameActive) {
+                spawnTimer = setTimeout(spawnEnemy, Math.random() * 1200 + 600);
+            }
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            // Road scroll
+            roadY += 7;
+            if (roadY >= 60) roadY = 0;
+
+            // Player movement
+            const moveLeft = keys['ArrowLeft'] || keys['KeyA'] || mobileLeft;
+            const moveRight = keys['ArrowRight'] || keys['KeyD'] || mobileRight;
+            
+            if (moveLeft) player.x -= 6;
+            if (moveRight) player.x += 6;
+            
+            // Boundaries
+            if (player.x < 15) player.x = 15;
+            if (player.x > canvas.width - player.width - 15) {
+                player.x = canvas.width - player.width - 15;
+            }
+
+            // Horn
+            const hornPressed = keys['Space'] || mobileHorn;
+            
+            if (hornPressed && player.hornCooldown <= 0) {
+                player.hornActive = true;
+                player.hornRadius = 10;
+                player.hornCooldown = 150;
+            }
+
+            if (player.hornActive) {
+                player.hornRadius += 8;
+                if (player.hornRadius > 140) {
+                    player.hornActive = false;
+                }
+            }
+            if (player.hornCooldown > 0) player.hornCooldown--;
+
+            // Update UI
+            score++;
+            scoreBox.innerText = 'Score: ' + score;
+            
+            if (player.hornCooldown <= 0) {
+                hornBox.innerText = 'Horn: READY';
+                hornBox.style.color = '#2ecc71';
+            } else {
+                hornBox.innerText = 'Horn: Reloading...';
+                hornBox.style.color = '#e74c3c';
+            }
+
+            // Update enemies
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                const enemy = enemies[i];
+
+                // AI behavior
+                enemy.behaviorTimer--;
+                if (enemy.behaviorTimer <= 0) {
+                    enemy.behaviorTimer = Math.random() * 150 + 50;
+                    
+                    if (enemy.type === 'microbus') {
+                        enemy.isStopping = !enemy.isStopping;
+                    } else if (enemy.type === 'scooter') {
+                        enemy.speed = Math.random() * 5 + 8;
+                        enemy.x += (Math.random() > 0.5 ? 40 : -40);
+                    }
+                }
+
+                // Move enemy
+                const speed = enemy.isStopping ? -7 : (enemy.speed - 7);
+                enemy.y -= speed;
+
+                // Horn effect
+                if (player.hornActive) {
+                    const dx = (enemy.x + enemy.width/2) - (player.x + player.width/2);
+                    const dy = (enemy.y + enemy.height/2) - (player.y + player.height/2);
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (distance < player.hornRadius) {
+                        enemy.x += dx > 0 ? 5 : -5;
+                    }
+                }
+
+                // Remove off-screen
+                if (enemy.y > canvas.height + 100 || enemy.y < -200) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                // Collision check
+                if (player.x < enemy.x + enemy.width &&
+                    player.x + player.width > enemy.x &&
+                    player.y < enemy.y + enemy.height &&
+                    player.y + player.height > enemy.y) {
+                    endGame(enemy);
+                    return;
+                }
+            }
+
+            draw();
+            animationId = requestAnimationFrame(update);
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Road
+            ctx.fillStyle = '#3a3a3a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Shoulders
+            ctx.fillStyle = '#cca673';
+            ctx.fillRect(0, 0, 15, canvas.height);
+            ctx.fillRect(canvas.width - 15, 0, 15, canvas.height);
+
+            // Lane markers
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            for (let i = roadY - 60; i < canvas.height; i += 60) {
+                ctx.fillRect(145, i, 4, 30);
+                ctx.fillRect(295, i, 4, 30);
+            }
+
+            // Horn circle
+            if (player.hornActive) {
+                ctx.strokeStyle = 'rgba(243, 156, 18, 0.5)';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(
+                    player.x + player.width/2,
+                    player.y + player.height/2,
+                    player.hornRadius,
+                    0, Math.PI * 2
+                );
+                ctx.stroke();
+            }
+
+            // Enemies
+            for (let i = 0; i < enemies.length; i++) {
+                const enemy = enemies[i];
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+                // Hazard lights
+                if (enemy.isStopping && enemy.type === 'microbus') {
+                    ctx.fillStyle = '#ff3300';
+                    ctx.fillRect(enemy.x, enemy.y + enemy.height - 5, 10, 8);
+                    ctx.fillRect(enemy.x + enemy.width - 10, enemy.y + enemy.height - 5, 10, 8);
+                }
+            }
+
+            // Player car
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Headlights
+            ctx.fillStyle = '#ffffaa';
+            ctx.fillRect(player.x + 4, player.y - 4, 8, 5);
+            ctx.fillRect(player.x + player.width - 12, player.y - 4, 8, 5);
+        }
+
+        function endGame(hitEnemy) {
+            gameActive = false;
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            if (spawnTimer) {
+                clearTimeout(spawnTimer);
+                spawnTimer = null;
+            }
+
+            gameOverScreen.style.display = 'flex';
+            finalScore.innerText = 'You managed to survive ' + score + ' meters.';
+            
+            const reasons = {
+                'microbus': 'A Microbus stopped short instantly in front of you!',
+                'scooter': 'A delivery scooter cut across your lane!',
+                'oldSedan': 'An old sedan braked without brake lights!'
+            };
+            crashReason.innerText = reasons[hitEnemy.type] || 'You crashed!';
+        }
+
+        function resetGame() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            if (spawnTimer) {
+                clearTimeout(spawnTimer);
+                spawnTimer = null;
+            }
+
+            enemies = [];
+            score = 0;
+            player.x = 200;
+            player.hornCooldown = 0;
+            player.hornActive = false;
+            player.hornRadius = 0;
+            
+            mobileLeft = false;
+            mobileRight = false;
+            mobileHorn = false;
+
+            gameOverScreen.style.display = 'none';
+            scoreBox.innerText = 'Score: 0';
+            hornBox.innerText = 'Horn: READY';
+            hornBox.style.color = '#2ecc71';
+            
+            gameActive = true;
+            
+            spawnEnemy();
+            update();
+        }
+
+        // ====================================================================
+        // START GAME
+        // ====================================================================
+        console.log('🚗 Cairo Chaos starting...');
+        spawnEnemy();
+        update();
+        console.log('✅ Game is running!');
+    </script>
 </body>
 </html>
