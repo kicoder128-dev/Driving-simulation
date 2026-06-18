@@ -2,70 +2,191 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Hassle City Driver · Chaotic Traffic Sim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Hassle City Driver · Mobile Edition</title>
   <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
     body {
       margin: 0;
       overflow: hidden;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      touch-action: manipulation;
     }
     #info {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      background: rgba(0,0,0,0.7);
+      top: 15px;
+      left: 15px;
+      background: rgba(0,0,0,0.75);
       color: #fff;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 8px;
       pointer-events: none;
       backdrop-filter: blur(8px);
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      z-index: 20;
+      font-size: clamp(0.7rem, 2vw, 0.9rem);
     }
     #speed {
-      font-size: 2rem;
+      font-size: clamp(1.5rem, 5vw, 2rem);
       font-weight: bold;
       color: #ffaa00;
     }
     .hint {
       position: absolute;
-      bottom: 30px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(20,20,20,0.8);
+      background: rgba(20,20,20,0.85);
       color: #ccc;
-      padding: 8px 25px;
-      border-radius: 30px;
-      font-size: 0.9rem;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-size: clamp(0.65rem, 1.8vw, 0.85rem);
       backdrop-filter: blur(5px);
       white-space: nowrap;
+      z-index: 20;
+      pointer-events: none;
     }
     .damage {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(180,0,0,0.8);
+      top: 15px;
+      right: 15px;
+      background: rgba(180,0,0,0.85);
       color: white;
-      padding: 8px 18px;
+      padding: 6px 16px;
       border-radius: 20px;
       font-weight: bold;
+      font-size: clamp(0.7rem, 2vw, 0.9rem);
       backdrop-filter: blur(4px);
+      z-index: 20;
+    }
+    /* Mobile Touch Controls */
+    .touch-controls {
+      position: absolute;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 15px;
+      pointer-events: none;
+      z-index: 30;
+    }
+    .dpad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .dpad-row {
+      display: flex;
+      gap: 15px;
+    }
+    .ctrl-btn {
+      width: clamp(50px, 15vw, 70px);
+      height: clamp(50px, 15vw, 70px);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.4);
+      color: white;
+      font-size: clamp(20px, 5vw, 28px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ctrl-btn:active {
+      background: rgba(255,255,255,0.45);
+      transform: scale(0.92);
+      border-color: #ffaa00;
+    }
+    .pedals {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .pedal-btn {
+      width: clamp(55px, 16vw, 75px);
+      height: clamp(55px, 16vw, 75px);
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.4);
+      color: white;
+      font-weight: bold;
+      font-size: clamp(14px, 4vw, 18px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      letter-spacing: 1px;
+    }
+    .pedal-btn:active {
+      background: rgba(255,170,0,0.6);
+      transform: scale(0.9);
+      border-color: #ffaa00;
+    }
+    /* Hide touch controls on desktop (optional) */
+    @media (min-width: 1025px) {
+      .touch-controls {
+        display: none;
+      }
     }
     @media (max-width: 600px) {
-      .hint { font-size: 0.7rem; padding: 6px 15px; bottom: 20px; }
-      #info { font-size: 0.8rem; padding: 6px 12px; }
+      .hint { 
+        bottom: 130px; 
+        font-size: 0.7rem; 
+        padding: 5px 14px;
+      }
+      .touch-controls {
+        bottom: 20px;
+        padding: 0 10px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="info">
     🚗 <span id="speed">0</span> km/h
-    <div style="font-size:0.8rem; color:#aaa;">arrow keys / WASD</div>
   </div>
-  <div class="damage" id="damageDisplay">⚡ HITS: 0</div>
-  <div class="hint">🚦 Chaotic city · Lane jumpers · Wrong way · Minibus stops</div>
+  <div class="damage" id="damageDisplay">⚡ 0</div>
+  <div class="hint" id="controlHint">🎮 Tap buttons or use keys</div>
 
-  <!-- Import maps and libraries -->
+  <!-- Touch Controls -->
+  <div class="touch-controls" id="touchControls">
+    <div class="dpad">
+      <div class="dpad-row">
+        <div class="ctrl-btn" id="btnUp">▲</div>
+      </div>
+      <div class="dpad-row">
+        <div class="ctrl-btn" id="btnLeft">◀</div>
+        <div class="ctrl-btn" id="btnRight">▶</div>
+      </div>
+      <div class="dpad-row">
+        <div class="ctrl-btn" id="btnDown">▼</div>
+      </div>
+    </div>
+    <div class="pedals">
+      <div class="pedal-btn" id="btnBrake">BRAKE</div>
+      <div class="pedal-btn" id="btnGas">GAS</div>
+    </div>
+  </div>
+
   <script type="importmap">
     {
       "imports": {
@@ -77,8 +198,7 @@
 
   <script type="module">
     import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
     // ---------- SCENE SETUP ----------
     const scene = new THREE.Scene();
@@ -89,7 +209,6 @@
     camera.position.set(0, 12, 15);
     camera.lookAt(0, 0, 10);
 
-    // WebGL Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -97,13 +216,12 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    // CSS2 for labels
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = 'absolute';
     labelRenderer.domElement.style.top = '0px';
     labelRenderer.domElement.style.left = '0px';
-    labelRenderer.domElement.style.pointerEvents = 'none'; // allow clicking through
+    labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild(labelRenderer.domElement);
 
     // ---------- LIGHTING ----------
@@ -113,8 +231,8 @@
     dirLight.position.set(20, 30, 10);
     dirLight.castShadow = true;
     dirLight.receiveShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.mapSize.width = 512;
+    dirLight.shadow.mapSize.height = 512;
     dirLight.shadow.camera.near = 1;
     dirLight.shadow.camera.far = 100;
     dirLight.shadow.camera.left = -30;
@@ -135,23 +253,21 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Road grid (main roads)
-    function createRoad(x, z, width, length, color=0x333344) {
+    function createRoad(x, z, width, length, color = 0x333344) {
       const geom = new THREE.PlaneGeometry(width, length);
       const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
       const road = new THREE.Mesh(geom, mat);
-      road.rotation.x = -Math.PI/2;
+      road.rotation.x = -Math.PI / 2;
       road.position.set(x, 0, z);
       road.receiveShadow = true;
       scene.add(road);
-      // lane markings
       if (width > 2.5) {
-        for (let i = -width/2 + 1.2; i <= width/2 - 1.2; i+=2.4) {
+        for (let i = -width / 2 + 1.2; i <= width / 2 - 1.2; i += 2.4) {
           const dash = new THREE.Mesh(
             new THREE.PlaneGeometry(0.25, 1.2),
             new THREE.MeshBasicMaterial({ color: 0xeeeeaa })
           );
-          dash.rotation.x = -Math.PI/2;
+          dash.rotation.x = -Math.PI / 2;
           dash.position.set(x + i, 0.01, z);
           dash.receiveShadow = true;
           scene.add(dash);
@@ -159,42 +275,38 @@
       }
     }
 
-    // Main avenues
-    createRoad(0, -18, 6.5, 40); // horizontal lower
-    createRoad(0, 18, 6.5, 40);  // horizontal upper
-    createRoad(-18, 0, 40, 6.5); // vertical left
-    createRoad(18, 0, 40, 6.5);  // vertical right
-    // Extra side roads (narrower)
+    createRoad(0, -18, 6.5, 40);
+    createRoad(0, 18, 6.5, 40);
+    createRoad(-18, 0, 40, 6.5);
+    createRoad(18, 0, 40, 6.5);
     createRoad(-9, -9, 3.2, 25, 0x3a3a4a);
     createRoad(9, 9, 3.2, 25, 0x3a3a4a);
     createRoad(-9, 9, 25, 3.2, 0x3a3a4a);
     createRoad(9, -9, 25, 3.2, 0x3a3a4a);
-    
-    // Buildings
+
     function addBuilding(x, z, w, d, h, color) {
       const geom = new THREE.BoxGeometry(w, h, d);
       const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
       const building = new THREE.Mesh(geom, mat);
-      building.position.set(x, h/2, z);
+      building.position.set(x, h / 2, z);
       building.castShadow = true;
       building.receiveShadow = true;
       scene.add(building);
-      // windows
       const windowMat = new THREE.MeshStandardMaterial({ color: 0xffdd99, emissive: new THREE.Color(0x221100) });
-      for (let i = 0.2; i < w; i+=0.9) {
-        for (let j = 0.5; j < h; j+=1.2) {
+      for (let i = 0.2; i < w; i += 0.9) {
+        for (let j = 0.5; j < h; j += 1.2) {
           const win = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 0.1), windowMat);
-          win.position.set(x - w/2 + i + 0.1, j, z + d/2 + 0.05);
+          win.position.set(x - w / 2 + i + 0.1, j, z + d / 2 + 0.05);
           win.castShadow = true;
           scene.add(win);
           const win2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 0.1), windowMat);
-          win2.position.set(x - w/2 + i + 0.1, j, z - d/2 - 0.05);
+          win2.position.set(x - w / 2 + i + 0.1, j, z - d / 2 - 0.05);
           win2.castShadow = true;
           scene.add(win2);
         }
       }
     }
-    
+
     const buildingPositions = [
       [-14, -14, 2.5, 2.5, 5, 0x8b6b4d], [14, -14, 2.5, 2.5, 6, 0x9b7b5d],
       [-14, 14, 2.8, 2.8, 4.5, 0x7a6a5a], [14, 14, 2.4, 2.4, 7, 0xad8b6b],
@@ -204,35 +316,33 @@
       [20, -6, 2.5, 2.5, 6.5, 0x7c6c5c], [20, 6, 2.6, 2.6, 5.2, 0x968676]
     ];
     buildingPositions.forEach(p => addBuilding(p[0], p[1], p[2], p[3], p[4], p[5]));
-    
-    // Traffic lights (visual)
-    function createTrafficLight(x, z, rotY) {
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.2), new THREE.MeshStandardMaterial({color: 0x555555}));
+
+    function createTrafficLight(x, z) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.2), new THREE.MeshStandardMaterial({ color: 0x555555 }));
       pole.position.set(x, 1.1, z);
       pole.castShadow = true;
       pole.receiveShadow = true;
       scene.add(pole);
-      const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.3), new THREE.MeshStandardMaterial({color: 0x222222}));
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.3), new THREE.MeshStandardMaterial({ color: 0x222222 }));
       box.position.set(x, 2.1, z);
       box.castShadow = true;
       box.receiveShadow = true;
       scene.add(box);
-      // lights (just colors)
-      const red = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0xff0000}));
-      red.position.set(x, 2.3, z-0.05);
+      const red = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+      red.position.set(x, 2.3, z - 0.05);
       scene.add(red);
-      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0xffaa00}));
-      yellow.position.set(x, 2.1, z-0.05);
+      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({ color: 0xffaa00 }));
+      yellow.position.set(x, 2.1, z - 0.05);
       scene.add(yellow);
-      const green = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-      green.position.set(x, 1.9, z-0.05);
+      const green = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+      green.position.set(x, 1.9, z - 0.05);
       scene.add(green);
     }
-    createTrafficLight(-10, -8.5, 0);
-    createTrafficLight(10, 8.5, Math.PI);
-    createTrafficLight(-8.5, 10, Math.PI/2);
-    createTrafficLight(8.5, -10, -Math.PI/2);
-    
+    createTrafficLight(-10, -8.5);
+    createTrafficLight(10, 8.5);
+    createTrafficLight(-8.5, 10);
+    createTrafficLight(8.5, -10);
+
     // ---------- PLAYER CAR ----------
     const playerCar = new THREE.Group();
     const bodyGeo = new THREE.BoxGeometry(1.6, 0.5, 3.2);
@@ -253,7 +363,7 @@
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.7 });
     function addWheel(x, z) {
       const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-      wheel.rotation.z = Math.PI/2;
+      wheel.rotation.z = Math.PI / 2;
       wheel.position.set(x, 0.25, z);
       wheel.castShadow = true;
       wheel.receiveShadow = true;
@@ -268,7 +378,6 @@
     playerCar.receiveShadow = true;
     scene.add(playerCar);
 
-    // Player state
     const player = {
       speed: 0,
       angle: 0,
@@ -278,18 +387,72 @@
       turnSpeed: 0.045,
       hits: 0
     };
-    
-    const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
-                   w: false, s: false, a: false, d: false };
-    
+
+    // Input state (keyboard + touch)
+    const inputState = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false
+    };
+
+    // Keyboard listeners
     window.addEventListener('keydown', (e) => {
-      if (e.key in keys) { keys[e.key] = true; e.preventDefault(); }
+      switch(e.key) {
+        case 'ArrowUp': case 'w': case 'W': inputState.forward = true; e.preventDefault(); break;
+        case 'ArrowDown': case 's': case 'S': inputState.backward = true; e.preventDefault(); break;
+        case 'ArrowLeft': case 'a': case 'A': inputState.left = true; e.preventDefault(); break;
+        case 'ArrowRight': case 'd': case 'D': inputState.right = true; e.preventDefault(); break;
+      }
     });
     window.addEventListener('keyup', (e) => {
-      if (e.key in keys) { keys[e.key] = false; e.preventDefault(); }
+      switch(e.key) {
+        case 'ArrowUp': case 'w': case 'W': inputState.forward = false; e.preventDefault(); break;
+        case 'ArrowDown': case 's': case 'S': inputState.backward = false; e.preventDefault(); break;
+        case 'ArrowLeft': case 'a': case 'A': inputState.left = false; e.preventDefault(); break;
+        case 'ArrowRight': case 'd': case 'D': inputState.right = false; e.preventDefault(); break;
+      }
     });
 
-    // ---------- NPC VEHICLES (chaotic) ----------
+    // Touch control setup
+    function setupTouchButton(id, action, value) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        inputState[action] = value;
+        btn.style.background = 'rgba(255,170,0,0.6)';
+      });
+      btn.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        inputState[action] = !value;
+        btn.style.background = 'rgba(255,255,255,0.2)';
+      });
+      btn.addEventListener('pointerleave', (e) => {
+        inputState[action] = !value;
+        btn.style.background = 'rgba(255,255,255,0.2)';
+      });
+      btn.addEventListener('pointercancel', (e) => {
+        inputState[action] = !value;
+        btn.style.background = 'rgba(255,255,255,0.2)';
+      });
+    }
+
+    setupTouchButton('btnUp', 'forward', true);
+    setupTouchButton('btnDown', 'backward', true);
+    setupTouchButton('btnLeft', 'left', true);
+    setupTouchButton('btnRight', 'right', true);
+    setupTouchButton('btnGas', 'forward', true);
+    setupTouchButton('btnBrake', 'backward', true);
+
+    // Detect if mobile for hint text
+    const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || window.innerWidth < 1025;
+    if (isMobile) {
+      document.getElementById('controlHint').textContent = '👆 Use on-screen buttons to drive';
+    }
+
+    // ---------- NPC VEHICLES ----------
     const npcVehicles = [];
     const vehicleTypes = [
       { color: 0xd94f4f, name: 'car' },
@@ -298,7 +461,7 @@
       { color: 0x9f6fbf, name: 'suv' },
       { color: 0x5f8fcf, name: 'hatch' }
     ];
-    
+
     function createNPCVehicle(color, type = 'car') {
       const group = new THREE.Group();
       const w = type === 'minibus' ? 1.9 : 1.5;
@@ -308,16 +471,16 @@
       bodyC.receiveShadow = true;
       bodyC.position.y = 0.35;
       group.add(bodyC);
-      const topC = new THREE.Mesh(new THREE.BoxGeometry(w*0.8, 0.45, l*0.55), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+      const topC = new THREE.Mesh(new THREE.BoxGeometry(w * 0.8, 0.45, l * 0.55), new THREE.MeshStandardMaterial({ color: 0x222222 }));
       topC.castShadow = true;
       topC.receiveShadow = true;
       topC.position.set(0, 0.75, -0.15);
       group.add(topC);
       const wheelG = new THREE.CylinderGeometry(0.4, 0.4, 0.45, 8);
-      const wMat = new THREE.MeshStandardMaterial({color:0x111111});
-      [[0.75,1.0],[ -0.75,1.0],[0.75,-1.0],[-0.75,-1.0]].forEach(([x,z]) => {
+      const wMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+      [[0.75, 1.0], [-0.75, 1.0], [0.75, -1.0], [-0.75, -1.0]].forEach(([x, z]) => {
         const wh = new THREE.Mesh(wheelG, wMat);
-        wh.rotation.z = Math.PI/2;
+        wh.rotation.z = Math.PI / 2;
         wh.position.set(x, 0.25, z);
         wh.castShadow = true;
         wh.receiveShadow = true;
@@ -326,10 +489,9 @@
       return group;
     }
 
-    // NPC data: group, direction vector, speed, type, behavior flags
     const npcData = [];
-    
-    function spawnNPC(x, z, angle, speed, color, type='car', behavior='normal') {
+
+    function spawnNPC(x, z, angle, speed, color, type = 'car', behavior = 'normal') {
       const vehicle = createNPCVehicle(color, type);
       vehicle.position.set(x, 0.25, z);
       vehicle.rotation.y = angle;
@@ -339,59 +501,53 @@
         speed: speed,
         angle: angle,
         type: type,
-        behavior: behavior, // 'normal', 'laneSwerve', 'redLightRunner', 'minibus', 'wrongWay'
+        behavior: behavior,
         laneChangeTimer: Math.random() * 3 + 1,
         stopTimer: 0,
-        stopped: false,
-        wrongWayDir: new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle))
+        stopped: false
       };
       npcVehicles.push(vehicle);
       npcData.push(data);
       return data;
     }
 
-    // Spawn chaotic traffic
-    for (let i = 0; i < 18; i++) {
-      const side = Math.floor(Math.random()*4);
+    for (let i = 0; i < 16; i++) {
+      const side = Math.floor(Math.random() * 4);
       let x, z, angle;
       const roadOffset = (Math.random() - 0.5) * 5.5;
-      if (side === 0) { x = -17 + roadOffset; z = -25 + Math.random()*10; angle = 0; }
-      else if (side === 1) { x = 17 + roadOffset; z = 25 - Math.random()*10; angle = Math.PI; }
-      else if (side === 2) { x = -25 + Math.random()*10; z = -17 + roadOffset; angle = Math.PI/2; }
-      else { x = 25 - Math.random()*10; z = 17 + roadOffset; angle = -Math.PI/2; }
-      
-      const colorChoice = vehicleTypes[Math.floor(Math.random()*vehicleTypes.length)].color;
+      if (side === 0) { x = -17 + roadOffset; z = -25 + Math.random() * 10; angle = 0; }
+      else if (side === 1) { x = 17 + roadOffset; z = 25 - Math.random() * 10; angle = Math.PI; }
+      else if (side === 2) { x = -25 + Math.random() * 10; z = -17 + roadOffset; angle = Math.PI / 2; }
+      else { x = 25 - Math.random() * 10; z = 17 + roadOffset; angle = -Math.PI / 2; }
+
+      const colorChoice = vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)].color;
       let behavior = 'normal';
       const r = Math.random();
       if (r < 0.25) behavior = 'laneSwerve';
       else if (r < 0.45) behavior = 'redLightRunner';
       else if (r < 0.6) behavior = 'minibus';
       else if (r < 0.72) behavior = 'wrongWay';
-      
+
       const type = behavior === 'minibus' ? 'minibus' : 'car';
-      spawnNPC(x, z, angle, 0.12 + Math.random()*0.13, colorChoice, type, behavior);
+      spawnNPC(x, z, angle, 0.11 + Math.random() * 0.12, colorChoice, type, behavior);
     }
-    
-    // Extra minibuses on right side
+
     spawnNPC(15, -8, 0, 0.1, 0xffcc00, 'minibus', 'minibus');
     spawnNPC(-15, 12, Math.PI, 0.11, 0xffaa22, 'minibus', 'minibus');
-    
-    // Wrong way spawns in narrow roads
-    spawnNPC(-8.5, -9.5, Math.PI/2, 0.09, 0xcc5555, 'car', 'wrongWay');
-    spawnNPC(8.8, 9.2, -Math.PI/2, 0.1, 0xcc5555, 'car', 'wrongWay');
+    spawnNPC(-8.5, -9.5, Math.PI / 2, 0.09, 0xcc5555, 'car', 'wrongWay');
+    spawnNPC(8.8, 9.2, -Math.PI / 2, 0.1, 0xcc5555, 'car', 'wrongWay');
 
-    // ---------- COLLISION & UI ----------
+    // ---------- UI & COLLISION ----------
     const damageDisplay = document.getElementById('damageDisplay');
     const speedDisplay = document.getElementById('speed');
-    
+
     function checkCollisions() {
       const playerBox = new THREE.Box3().setFromObject(playerCar);
       for (let i = 0; i < npcVehicles.length; i++) {
         const npcBox = new THREE.Box3().setFromObject(npcVehicles[i]);
         if (playerBox.intersectsBox(npcBox)) {
           player.hits += 1;
-          damageDisplay.textContent = `⚡ HITS: ${player.hits}`;
-          // push player back slightly
+          damageDisplay.textContent = `⚡ ${player.hits}`;
           const dir = new THREE.Vector3();
           dir.subVectors(playerCar.position, npcVehicles[i].position).normalize();
           playerCar.position.add(dir.multiplyScalar(0.6));
@@ -401,18 +557,16 @@
       }
     }
 
-    // ---------- NPC BEHAVIOR UPDATE ----------
     function updateNPCs(deltaTime) {
       for (let i = 0; i < npcData.length; i++) {
         const d = npcData[i];
         const mesh = d.mesh;
-        
-        // Minibus stop behavior
+
         if (d.behavior === 'minibus') {
           d.stopTimer -= deltaTime;
           if (d.stopTimer <= 0) {
             d.stopped = !d.stopped;
-            d.stopTimer = d.stopped ? 2.5 + Math.random()*2 : 3 + Math.random()*4;
+            d.stopTimer = d.stopped ? 2.5 + Math.random() * 2 : 3 + Math.random() * 4;
           }
           if (d.stopped) {
             mesh.position.x += Math.sin(d.angle) * d.speed * 0.1;
@@ -420,8 +574,7 @@
             continue;
           }
         }
-        
-        // Lane swerve behavior
+
         if (d.behavior === 'laneSwerve') {
           d.laneChangeTimer -= deltaTime;
           if (d.laneChangeTimer <= 0) {
@@ -430,64 +583,56 @@
             mesh.rotation.y = d.angle;
           }
         }
-        
-        // Wrong way: keep moving but might turn slightly
+
         if (d.behavior === 'wrongWay') {
-          // occasionally drift
-          if (Math.random() < 0.01) d.angle += (Math.random()-0.5)*0.2;
+          if (Math.random() < 0.01) d.angle += (Math.random() - 0.5) * 0.2;
         }
-        
-        // Red light runner: sometimes ignores (just drives through)
-        // movement
+
         const moveX = Math.sin(d.angle) * d.speed * deltaTime * 28;
         const moveZ = Math.cos(d.angle) * d.speed * deltaTime * 28;
         mesh.position.x += moveX;
         mesh.position.z += moveZ;
         mesh.rotation.y = d.angle;
-        
-        // Boundary wrap / turn around
+
         const pos = mesh.position;
         if (pos.x > 28 || pos.x < -28 || pos.z > 28 || pos.z < -28) {
-          d.angle += Math.PI + (Math.random()-0.5)*0.8;
+          d.angle += Math.PI + (Math.random() - 0.5) * 0.8;
           mesh.position.x = Math.max(-27, Math.min(27, pos.x));
           mesh.position.z = Math.max(-27, Math.min(27, pos.z));
         }
       }
     }
 
-    // ---------- PLAYER CONTROL ----------
     function updatePlayer(deltaTime) {
-      const forward = (keys.ArrowUp || keys.w) ? 1 : 0;
-      const backward = (keys.ArrowDown || keys.s) ? 1 : 0;
-      const left = (keys.ArrowLeft || keys.a) ? 1 : 0;
-      const right = (keys.ArrowRight || keys.d) ? 1 : 0;
-      
+      const forward = inputState.forward ? 1 : 0;
+      const backward = inputState.backward ? 1 : 0;
+      const left = inputState.left ? 1 : 0;
+      const right = inputState.right ? 1 : 0;
+
       if (forward) player.speed = Math.min(player.speed + player.acceleration * deltaTime * 20, player.maxSpeed);
-      else if (backward) player.speed = Math.max(player.speed - player.acceleration * deltaTime * 15, -player.maxSpeed*0.5);
+      else if (backward) player.speed = Math.max(player.speed - player.acceleration * deltaTime * 15, -player.maxSpeed * 0.5);
       else player.speed *= player.friction;
-      
+
       if (Math.abs(player.speed) > 0.1) {
         const turnDirection = right - left;
         player.angle += turnDirection * player.turnSpeed * (player.speed > 0 ? 1 : -1) * deltaTime * 18;
       }
-      
+
       playerCar.rotation.y = player.angle;
       const moveX = Math.sin(player.angle) * player.speed * deltaTime * 10;
       const moveZ = Math.cos(player.angle) * player.speed * deltaTime * 10;
       playerCar.position.x += moveX;
       playerCar.position.z += moveZ;
-      
-      // Keep in bounds
+
       playerCar.position.x = Math.max(-26, Math.min(26, playerCar.position.x));
       playerCar.position.z = Math.max(-26, Math.min(26, playerCar.position.z));
-      
+
       speedDisplay.textContent = Math.abs(Math.floor(player.speed * 3.2));
     }
 
-    // Camera follow
     function updateCamera() {
       const camOffset = new THREE.Vector3(0, 5.5, -8);
-      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), player.angle);
+      camOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.angle);
       camera.position.lerp(
         new THREE.Vector3(playerCar.position.x + camOffset.x, playerCar.position.y + camOffset.y, playerCar.position.z + camOffset.z),
         0.15
@@ -495,17 +640,14 @@
       camera.lookAt(playerCar.position.x, playerCar.position.y + 1.2, playerCar.position.z);
     }
 
-    // Animation loop
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     function animate() {
       const delta = Math.min(clock.getDelta(), 0.1);
-      
       updatePlayer(delta);
       updateNPCs(delta);
       checkCollisions();
       updateCamera();
-      
       renderer.render(scene, camera);
       labelRenderer.render(scene, camera);
       requestAnimationFrame(animate);
@@ -518,9 +660,22 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      
+      // Update mobile hint visibility
+      const hint = document.getElementById('controlHint');
+      if (window.innerWidth < 1025) {
+        hint.textContent = '👆 Use on-screen buttons to drive';
+      } else {
+        hint.textContent = '🎮 Arrow keys / WASD to drive';
+      }
     });
 
-    console.log('🚦 Hassle City Driver ready! Use arrow keys or WASD.');
+    // Prevent double-tap zoom on buttons
+    document.querySelectorAll('.ctrl-btn, .pedal-btn').forEach(btn => {
+      btn.addEventListener('touchstart', (e) => e.preventDefault());
+    });
+
+    console.log('🚦 Hassle City Driver ready! Mobile & Desktop supported.');
   </script>
 </body>
 </html>
