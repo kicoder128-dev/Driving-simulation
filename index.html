@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Hassle City Driver · Chaotic Traffic Sim</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    #speed {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #ffaa00;
+    }
+    .hint {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,20,20,0.8);
+      color: #ccc;
+      padding: 8px 25px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      backdrop-filter: blur(5px);
+      white-space: nowrap;
+    }
+    .damage {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(180,0,0,0.8);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      backdrop-filter: blur(4px);
+    }
+    @media (max-width: 600px) {
+      .hint { font-size: 0.7rem; padding: 6px 15px; bottom: 20px; }
+      #info { font-size: 0.8rem; padding: 6px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    🚗 <span id="speed">0</span> km/h
+    <div style="font-size:0.8rem; color:#aaa;">arrow keys / WASD</div>
+  </div>
+  <div class="damage" id="damageDisplay">⚡ HITS: 0</div>
+  <div class="hint">🚦 Chaotic city · Lane jumpers · Wrong way · Minibus stops</div>
+
+  <!-- Import maps and libraries -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // ---------- SCENE SETUP ----------
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2a3f5f);
+    scene.fog = new THREE.Fog(0x2a3f5f, 30, 120);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 200);
+    camera.position.set(0, 12, 15);
+    camera.lookAt(0, 0, 10);
+
+    // WebGL Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    // CSS2 for labels
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.left = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none'; // allow clicking through
+    document.body.appendChild(labelRenderer.domElement);
+
+    // ---------- LIGHTING ----------
+    const ambient = new THREE.AmbientLight(0x404066);
+    scene.add(ambient);
+    const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+    dirLight.position.set(20, 30, 10);
+    dirLight.castShadow = true;
+    dirLight.receiveShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.camera.near = 1;
+    dirLight.shadow.camera.far = 100;
+    dirLight.shadow.camera.left = -30;
+    dirLight.shadow.camera.right = 30;
+    dirLight.shadow.camera.top = 30;
+    dirLight.shadow.camera.bottom = -20;
+    scene.add(dirLight);
+    
+    const fillLight = new THREE.AmbientLight(0x446688);
+    scene.add(fillLight);
+
+    // ---------- GROUND & CITY ----------
+    const groundGeometry = new THREE.PlaneGeometry(80, 80);
+    const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.9 });
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.01;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Road grid (main roads)
+    function createRoad(x, z, width, length, color=0x333344) {
+      const geom = new THREE.PlaneGeometry(width, length);
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
+      const road = new THREE.Mesh(geom, mat);
+      road.rotation.x = -Math.PI/2;
+      road.position.set(x, 0, z);
+      road.receiveShadow = true;
+      scene.add(road);
+      // lane markings
+      if (width > 2.5) {
+        for (let i = -width/2 + 1.2; i <= width/2 - 1.2; i+=2.4) {
+          const dash = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.25, 1.2),
+            new THREE.MeshBasicMaterial({ color: 0xeeeeaa })
+          );
+          dash.rotation.x = -Math.PI/2;
+          dash.position.set(x + i, 0.01, z);
+          dash.receiveShadow = true;
+          scene.add(dash);
+        }
+      }
+    }
+
+    // Main avenues
+    createRoad(0, -18, 6.5, 40); // horizontal lower
+    createRoad(0, 18, 6.5, 40);  // horizontal upper
+    createRoad(-18, 0, 40, 6.5); // vertical left
+    createRoad(18, 0, 40, 6.5);  // vertical right
+    // Extra side roads (narrower)
+    createRoad(-9, -9, 3.2, 25, 0x3a3a4a);
+    createRoad(9, 9, 3.2, 25, 0x3a3a4a);
+    createRoad(-9, 9, 25, 3.2, 0x3a3a4a);
+    createRoad(9, -9, 25, 3.2, 0x3a3a4a);
+    
+    // Buildings
+    function addBuilding(x, z, w, d, h, color) {
+      const geom = new THREE.BoxGeometry(w, h, d);
+      const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4 });
+      const building = new THREE.Mesh(geom, mat);
+      building.position.set(x, h/2, z);
+      building.castShadow = true;
+      building.receiveShadow = true;
+      scene.add(building);
+      // windows
+      const windowMat = new THREE.MeshStandardMaterial({ color: 0xffdd99, emissive: new THREE.Color(0x221100) });
+      for (let i = 0.2; i < w; i+=0.9) {
+        for (let j = 0.5; j < h; j+=1.2) {
+          const win = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 0.1), windowMat);
+          win.position.set(x - w/2 + i + 0.1, j, z + d/2 + 0.05);
+          win.castShadow = true;
+          scene.add(win);
+          const win2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 0.1), windowMat);
+          win2.position.set(x - w/2 + i + 0.1, j, z - d/2 - 0.05);
+          win2.castShadow = true;
+          scene.add(win2);
+        }
+      }
+    }
+    
+    const buildingPositions = [
+      [-14, -14, 2.5, 2.5, 5, 0x8b6b4d], [14, -14, 2.5, 2.5, 6, 0x9b7b5d],
+      [-14, 14, 2.8, 2.8, 4.5, 0x7a6a5a], [14, 14, 2.4, 2.4, 7, 0xad8b6b],
+      [-6, -20, 2.2, 2.2, 5.5, 0x6b5a4a], [6, -20, 2.6, 2.6, 4.8, 0x8a7a6a],
+      [-6, 20, 2.5, 2.5, 6.2, 0x9c8b7b], [6, 20, 2.3, 2.3, 5, 0x7b6b5b],
+      [-20, -6, 2.7, 2.7, 5.8, 0x8d7c6c], [-20, 6, 2.4, 2.4, 5.4, 0xa58b6b],
+      [20, -6, 2.5, 2.5, 6.5, 0x7c6c5c], [20, 6, 2.6, 2.6, 5.2, 0x968676]
+    ];
+    buildingPositions.forEach(p => addBuilding(p[0], p[1], p[2], p[3], p[4], p[5]));
+    
+    // Traffic lights (visual)
+    function createTrafficLight(x, z, rotY) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 2.2), new THREE.MeshStandardMaterial({color: 0x555555}));
+      pole.position.set(x, 1.1, z);
+      pole.castShadow = true;
+      pole.receiveShadow = true;
+      scene.add(pole);
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.3), new THREE.MeshStandardMaterial({color: 0x222222}));
+      box.position.set(x, 2.1, z);
+      box.castShadow = true;
+      box.receiveShadow = true;
+      scene.add(box);
+      // lights (just colors)
+      const red = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0xff0000}));
+      red.position.set(x, 2.3, z-0.05);
+      scene.add(red);
+      const yellow = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0xffaa00}));
+      yellow.position.set(x, 2.1, z-0.05);
+      scene.add(yellow);
+      const green = new THREE.Mesh(new THREE.SphereGeometry(0.12), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+      green.position.set(x, 1.9, z-0.05);
+      scene.add(green);
+    }
+    createTrafficLight(-10, -8.5, 0);
+    createTrafficLight(10, 8.5, Math.PI);
+    createTrafficLight(-8.5, 10, Math.PI/2);
+    createTrafficLight(8.5, -10, -Math.PI/2);
+    
+    // ---------- PLAYER CAR ----------
+    const playerCar = new THREE.Group();
+    const bodyGeo = new THREE.BoxGeometry(1.6, 0.5, 3.2);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3a6ea5, roughness: 0.3, metalness: 0.7 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.castShadow = true;
+    body.receiveShadow = true;
+    body.position.y = 0.3;
+    playerCar.add(body);
+    const cabinGeo = new THREE.BoxGeometry(1.2, 0.45, 1.7);
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.2 });
+    const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+    cabin.castShadow = true;
+    cabin.receiveShadow = true;
+    cabin.position.set(0, 0.65, -0.25);
+    playerCar.add(cabin);
+    const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.5, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.7 });
+    function addWheel(x, z) {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.rotation.z = Math.PI/2;
+      wheel.position.set(x, 0.25, z);
+      wheel.castShadow = true;
+      wheel.receiveShadow = true;
+      playerCar.add(wheel);
+    }
+    addWheel(0.9, 1.1);
+    addWheel(-0.9, 1.1);
+    addWheel(0.9, -1.1);
+    addWheel(-0.9, -1.1);
+    playerCar.position.set(0, 0.3, 0);
+    playerCar.castShadow = true;
+    playerCar.receiveShadow = true;
+    scene.add(playerCar);
+
+    // Player state
+    const player = {
+      speed: 0,
+      angle: 0,
+      maxSpeed: 28,
+      acceleration: 0.5,
+      friction: 0.92,
+      turnSpeed: 0.045,
+      hits: 0
+    };
+    
+    const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+                   w: false, s: false, a: false, d: false };
+    
+    window.addEventListener('keydown', (e) => {
+      if (e.key in keys) { keys[e.key] = true; e.preventDefault(); }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.key in keys) { keys[e.key] = false; e.preventDefault(); }
+    });
+
+    // ---------- NPC VEHICLES (chaotic) ----------
+    const npcVehicles = [];
+    const vehicleTypes = [
+      { color: 0xd94f4f, name: 'car' },
+      { color: 0x4f8a4f, name: 'sedan' },
+      { color: 0xdfaf4f, name: 'taxi' },
+      { color: 0x9f6fbf, name: 'suv' },
+      { color: 0x5f8fcf, name: 'hatch' }
+    ];
+    
+    function createNPCVehicle(color, type = 'car') {
+      const group = new THREE.Group();
+      const w = type === 'minibus' ? 1.9 : 1.5;
+      const l = type === 'minibus' ? 3.8 : 2.9;
+      const bodyC = new THREE.Mesh(new THREE.BoxGeometry(w, 0.6, l), new THREE.MeshStandardMaterial({ color, roughness: 0.3 }));
+      bodyC.castShadow = true;
+      bodyC.receiveShadow = true;
+      bodyC.position.y = 0.35;
+      group.add(bodyC);
+      const topC = new THREE.Mesh(new THREE.BoxGeometry(w*0.8, 0.45, l*0.55), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+      topC.castShadow = true;
+      topC.receiveShadow = true;
+      topC.position.set(0, 0.75, -0.15);
+      group.add(topC);
+      const wheelG = new THREE.CylinderGeometry(0.4, 0.4, 0.45, 8);
+      const wMat = new THREE.MeshStandardMaterial({color:0x111111});
+      [[0.75,1.0],[ -0.75,1.0],[0.75,-1.0],[-0.75,-1.0]].forEach(([x,z]) => {
+        const wh = new THREE.Mesh(wheelG, wMat);
+        wh.rotation.z = Math.PI/2;
+        wh.position.set(x, 0.25, z);
+        wh.castShadow = true;
+        wh.receiveShadow = true;
+        group.add(wh);
+      });
+      return group;
+    }
+
+    // NPC data: group, direction vector, speed, type, behavior flags
+    const npcData = [];
+    
+    function spawnNPC(x, z, angle, speed, color, type='car', behavior='normal') {
+      const vehicle = createNPCVehicle(color, type);
+      vehicle.position.set(x, 0.25, z);
+      vehicle.rotation.y = angle;
+      scene.add(vehicle);
+      const data = {
+        mesh: vehicle,
+        speed: speed,
+        angle: angle,
+        type: type,
+        behavior: behavior, // 'normal', 'laneSwerve', 'redLightRunner', 'minibus', 'wrongWay'
+        laneChangeTimer: Math.random() * 3 + 1,
+        stopTimer: 0,
+        stopped: false,
+        wrongWayDir: new THREE.Vector3(Math.sin(angle), 0, Math.cos(angle))
+      };
+      npcVehicles.push(vehicle);
+      npcData.push(data);
+      return data;
+    }
+
+    // Spawn chaotic traffic
+    for (let i = 0; i < 18; i++) {
+      const side = Math.floor(Math.random()*4);
+      let x, z, angle;
+      const roadOffset = (Math.random() - 0.5) * 5.5;
+      if (side === 0) { x = -17 + roadOffset; z = -25 + Math.random()*10; angle = 0; }
+      else if (side === 1) { x = 17 + roadOffset; z = 25 - Math.random()*10; angle = Math.PI; }
+      else if (side === 2) { x = -25 + Math.random()*10; z = -17 + roadOffset; angle = Math.PI/2; }
+      else { x = 25 - Math.random()*10; z = 17 + roadOffset; angle = -Math.PI/2; }
+      
+      const colorChoice = vehicleTypes[Math.floor(Math.random()*vehicleTypes.length)].color;
+      let behavior = 'normal';
+      const r = Math.random();
+      if (r < 0.25) behavior = 'laneSwerve';
+      else if (r < 0.45) behavior = 'redLightRunner';
+      else if (r < 0.6) behavior = 'minibus';
+      else if (r < 0.72) behavior = 'wrongWay';
+      
+      const type = behavior === 'minibus' ? 'minibus' : 'car';
+      spawnNPC(x, z, angle, 0.12 + Math.random()*0.13, colorChoice, type, behavior);
+    }
+    
+    // Extra minibuses on right side
+    spawnNPC(15, -8, 0, 0.1, 0xffcc00, 'minibus', 'minibus');
+    spawnNPC(-15, 12, Math.PI, 0.11, 0xffaa22, 'minibus', 'minibus');
+    
+    // Wrong way spawns in narrow roads
+    spawnNPC(-8.5, -9.5, Math.PI/2, 0.09, 0xcc5555, 'car', 'wrongWay');
+    spawnNPC(8.8, 9.2, -Math.PI/2, 0.1, 0xcc5555, 'car', 'wrongWay');
+
+    // ---------- COLLISION & UI ----------
+    const damageDisplay = document.getElementById('damageDisplay');
+    const speedDisplay = document.getElementById('speed');
+    
+    function checkCollisions() {
+      const playerBox = new THREE.Box3().setFromObject(playerCar);
+      for (let i = 0; i < npcVehicles.length; i++) {
+        const npcBox = new THREE.Box3().setFromObject(npcVehicles[i]);
+        if (playerBox.intersectsBox(npcBox)) {
+          player.hits += 1;
+          damageDisplay.textContent = `⚡ HITS: ${player.hits}`;
+          // push player back slightly
+          const dir = new THREE.Vector3();
+          dir.subVectors(playerCar.position, npcVehicles[i].position).normalize();
+          playerCar.position.add(dir.multiplyScalar(0.6));
+          player.speed *= 0.5;
+          break;
+        }
+      }
+    }
+
+    // ---------- NPC BEHAVIOR UPDATE ----------
+    function updateNPCs(deltaTime) {
+      for (let i = 0; i < npcData.length; i++) {
+        const d = npcData[i];
+        const mesh = d.mesh;
+        
+        // Minibus stop behavior
+        if (d.behavior === 'minibus') {
+          d.stopTimer -= deltaTime;
+          if (d.stopTimer <= 0) {
+            d.stopped = !d.stopped;
+            d.stopTimer = d.stopped ? 2.5 + Math.random()*2 : 3 + Math.random()*4;
+          }
+          if (d.stopped) {
+            mesh.position.x += Math.sin(d.angle) * d.speed * 0.1;
+            mesh.position.z += Math.cos(d.angle) * d.speed * 0.1;
+            continue;
+          }
+        }
+        
+        // Lane swerve behavior
+        if (d.behavior === 'laneSwerve') {
+          d.laneChangeTimer -= deltaTime;
+          if (d.laneChangeTimer <= 0) {
+            d.angle += (Math.random() - 0.5) * 0.4;
+            d.laneChangeTimer = 1.2 + Math.random() * 2.5;
+            mesh.rotation.y = d.angle;
+          }
+        }
+        
+        // Wrong way: keep moving but might turn slightly
+        if (d.behavior === 'wrongWay') {
+          // occasionally drift
+          if (Math.random() < 0.01) d.angle += (Math.random()-0.5)*0.2;
+        }
+        
+        // Red light runner: sometimes ignores (just drives through)
+        // movement
+        const moveX = Math.sin(d.angle) * d.speed * deltaTime * 28;
+        const moveZ = Math.cos(d.angle) * d.speed * deltaTime * 28;
+        mesh.position.x += moveX;
+        mesh.position.z += moveZ;
+        mesh.rotation.y = d.angle;
+        
+        // Boundary wrap / turn around
+        const pos = mesh.position;
+        if (pos.x > 28 || pos.x < -28 || pos.z > 28 || pos.z < -28) {
+          d.angle += Math.PI + (Math.random()-0.5)*0.8;
+          mesh.position.x = Math.max(-27, Math.min(27, pos.x));
+          mesh.position.z = Math.max(-27, Math.min(27, pos.z));
+        }
+      }
+    }
+
+    // ---------- PLAYER CONTROL ----------
+    function updatePlayer(deltaTime) {
+      const forward = (keys.ArrowUp || keys.w) ? 1 : 0;
+      const backward = (keys.ArrowDown || keys.s) ? 1 : 0;
+      const left = (keys.ArrowLeft || keys.a) ? 1 : 0;
+      const right = (keys.ArrowRight || keys.d) ? 1 : 0;
+      
+      if (forward) player.speed = Math.min(player.speed + player.acceleration * deltaTime * 20, player.maxSpeed);
+      else if (backward) player.speed = Math.max(player.speed - player.acceleration * deltaTime * 15, -player.maxSpeed*0.5);
+      else player.speed *= player.friction;
+      
+      if (Math.abs(player.speed) > 0.1) {
+        const turnDirection = right - left;
+        player.angle += turnDirection * player.turnSpeed * (player.speed > 0 ? 1 : -1) * deltaTime * 18;
+      }
+      
+      playerCar.rotation.y = player.angle;
+      const moveX = Math.sin(player.angle) * player.speed * deltaTime * 10;
+      const moveZ = Math.cos(player.angle) * player.speed * deltaTime * 10;
+      playerCar.position.x += moveX;
+      playerCar.position.z += moveZ;
+      
+      // Keep in bounds
+      playerCar.position.x = Math.max(-26, Math.min(26, playerCar.position.x));
+      playerCar.position.z = Math.max(-26, Math.min(26, playerCar.position.z));
+      
+      speedDisplay.textContent = Math.abs(Math.floor(player.speed * 3.2));
+    }
+
+    // Camera follow
+    function updateCamera() {
+      const camOffset = new THREE.Vector3(0, 5.5, -8);
+      camOffset.applyAxisAngle(new THREE.Vector3(0,1,0), player.angle);
+      camera.position.lerp(
+        new THREE.Vector3(playerCar.position.x + camOffset.x, playerCar.position.y + camOffset.y, playerCar.position.z + camOffset.z),
+        0.15
+      );
+      camera.lookAt(playerCar.position.x, playerCar.position.y + 1.2, playerCar.position.z);
+    }
+
+    // Animation loop
+    let clock = new THREE.Clock();
+
+    function animate() {
+      const delta = Math.min(clock.getDelta(), 0.1);
+      
+      updatePlayer(delta);
+      updateNPCs(delta);
+      checkCollisions();
+      updateCamera();
+      
+      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    console.log('🚦 Hassle City Driver ready! Use arrow keys or WASD.');
+  </script>
+</body>
+</html>
